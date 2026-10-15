@@ -1,0 +1,417 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Baloo 2", "Arial Rounded MT Bold", "Arial Black", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
+}
+
+/* ---- Jersey Merge palette & spacing tokens ---- */
+:root {
+  --jm-ink: #0f1b3d;
+  --jm-violet: #2a1b5c;
+  --jm-surface: #1b2450;
+  --jm-surface-2: #16204a;
+  --jm-yellow: #ffc93c;
+  --jm-turq: #2ec4b6;
+  --jm-coral: #ff5a5f;
+  --jm-text: #ffffff;
+  --jm-dim: #c7ccea;
+  --jm-mute: #9fb0e8;
+  --jm-gold-glow: rgba(255, 201, 60, 0.35);
+  --jm-space-1: 0.25rem;
+  --jm-space-2: 0.5rem;
+  --jm-space-3: 0.75rem;
+  --jm-space-4: 1rem;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  background: linear-gradient(165deg, #0f1b3d 0%, #191a4e 55%, #2a1b5c 100%) fixed;
+  color: var(--jm-text);
+  font-family: var(--font-sans);
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Visible keyboard focus (accessibility) */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 3px solid rgba(46, 196, 182, 0.9);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Notch / home-indicator safe padding (viewport-fit=cover). */
+.safe-area-main {
+  padding-top: max(1.25rem, env(safe-area-inset-top));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .safe-area-main {
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+}
+
+canvas {
+  display: block;
+}
+
+/* ---- Game layout: portrait-first (stacked), landscape/desktop (3 columns) ---- */
+
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jm-space-4);
+}
+.layout-left,
+.layout-right,
+.layout-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jm-space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * Landscape phones: board in the middle, HUD on the left, power-ups on the
+ * right. Grid (not flex) so the middle track can never collapse to 0 — the
+ * board keeps a definite width and its aspect-ratio keeps it in view.
+ */
+@media (orientation: landscape) and (max-height: 640px) {
+  .game-layout {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr) 150px;
+    align-items: center;
+    gap: var(--jm-space-2);
+  }
+  .layout-left {
+    gap: var(--jm-space-2);
+  }
+  /* Narrow column: stack the HUD tiles instead of squeezing 4 across. */
+  .layout-left .hud-grid {
+    grid-template-columns: 1fr;
+    gap: var(--jm-space-2);
+  }
+  .layout-board {
+    /* leave room for the header + full-width HUD above the board */
+    max-width: calc((100dvh - 158px) * 0.5833);
+    margin-inline: auto;
+  }
+  .layout-right {
+    gap: var(--jm-space-2);
+  }
+  .layout-right .powerup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .layout-right .controls-row {
+    flex-direction: column;
+  }
+  .layout-right .powerup-info-panel {
+    display: none;
+  }
+}
+
+/*
+ * Desktop / large screens: wider side panels, board stays the focus.
+ * Grid again so the board track is always resolvable.
+ */
+@media (min-width: 900px) {
+  .game-layout {
+    display: grid;
+    grid-template-columns: 196px minmax(0, 1fr) 206px;
+    align-items: start;
+    gap: var(--jm-space-4);
+  }
+  .layout-right .powerup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .layout-right .controls-row {
+    flex-direction: column;
+  }
+}
+
+/* ---- Main menu ---- */
+
+.menu-scroll {
+  padding: max(var(--jm-space-4), env(safe-area-inset-top)) var(--jm-space-4) var(--jm-space-4);
+}
+.menu-footer {
+  padding-bottom: max(var(--jm-space-4), env(safe-area-inset-bottom));
+}
+
+.menu-title {
+  color: #fff;
+  text-shadow:
+    0 2px 0 rgba(8, 12, 32, 0.55),
+    0 0 22px var(--jm-gold-glow);
+}
+
+.menu-main {
+  min-width: 0;
+}
+
+/* Theme scrollbars: thin, translucent lilac thumb, transparent track */
+.menu-scrollable,
+.menu-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 123, 255, 0.45) transparent;
+}
+.menu-scrollable::-webkit-scrollbar,
+.menu-panel::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.menu-scrollable::-webkit-scrollbar-track,
+.menu-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.menu-scrollable::-webkit-scrollbar-thumb,
+.menu-panel::-webkit-scrollbar-thumb {
+  background: rgba(155, 123, 255, 0.45);
+  border-radius: 999px;
+}
+
+/* Bottom fade hint that the panel scrolls */
+.menu-fade {
+  position: relative;
+}
+.menu-fade::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(20, 25, 58, 0.85), transparent);
+  border-radius: 0 0 1rem 1rem;
+}
+
+/* Landscape phone: menu becomes two columns (title/hero left, quests right) */
+@media (orientation: landscape) and (max-height: 600px) {
+  .menu-scroll {
+    flex-direction: row;
+    gap: var(--jm-space-4);
+  }
+  .menu-side {
+    flex: 0 0 40%;
+    min-width: 0;
+  }
+  .menu-title {
+    font-size: 24px;
+  }
+  .menu-hero {
+    display: none; /* never eats quest space on landscape */
+  }
+}
+
+/* ---- Splash / opening animation ---- */
+
+@keyframes splash-drop {
+  0% {
+    transform: translateY(-140px) scale(0.9);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(8px) scale(1.03);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-6px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.splash-drop {
+  display: inline-block;
+  animation: splash-drop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes splash-letter {
+  from {
+    transform: translateY(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.splash-letter {
+  display: inline-block;
+  animation: splash-letter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes splash-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.splash-fade {
+  opacity: 0;
+  animation: splash-fade 0.45s ease both;
+}
+
+@keyframes splash-bar {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+.splash-bar-fill {
+  animation: splash-bar 1.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.splash-stripes {
+  background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.04) 0 26px, transparent 26px 52px);
+}
+
+.splash-out {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+/* ---- Menu hero: very slow drifting kits ---- */
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(2deg);
+  }
+}
+.hero-float {
+  display: inline-block;
+  animation: hero-float 7s ease-in-out infinite;
+}
+
+/* ---- Claimable quest pulse ---- */
+
+@keyframes claim-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 201, 60, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 201, 60, 0);
+  }
+}
+.claim-pulse {
+  animation: claim-pulse 1.6s ease-in-out infinite;
+}
+
+/* ---- Tab panel fade on switch ---- */
+
+@keyframes tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tab-fade {
+  animation: tab-fade 0.18s ease;
+}
+
+/* ---- Achievement toast ---- */
+
+@keyframes toast-in {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.toast-card {
+  animation: toast-in 0.3s ease;
+}
+
+/* ---- Mascot cheer bounce ---- */
+
+@keyframes mascot-bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    transform: translateY(-7px) scale(1.12) rotate(-6deg);
+  }
+  65% {
+    transform: translateY(2px) scale(0.96) rotate(4deg);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+.mascot-bounce {
+  animation: mascot-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---- HUD score bump ---- */
+
+@keyframes score-bump {
+  0% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.score-bump {
+  display: inline-block;
+  animation: score-bump 0.18s ease-out;
+}
+
+/* ---- Reduced motion: decorative animation off, content stays ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-drop,
+  .splash-letter,
+  .splash-fade,
+  .splash-bar-fill,
+  .score-bump,
+  .toast-card,
+  .mascot-bounce,
+  .hero-float,
+  .claim-pulse,
+  .tab-fade {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .splash-bar-fill {
+    width: 100%;
+  }
+  .splash-out {
+    transition: none;
+  }
+}

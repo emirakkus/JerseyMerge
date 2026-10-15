@@ -1,0 +1,26 @@
+{
+  "name": "Jersey Merge",
+  "short_name": "Jersey Merge",
+  "description": "Drop football jerseys, merge identical kits and build your way up to 2048.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e3f1fc",
+  "theme_color": "#101d42",
+  "icons": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
