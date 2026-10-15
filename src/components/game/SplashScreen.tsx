@@ -42,11 +42,7 @@ export function SplashScreen() {
       </h1>
 
       <p
-<<<<<<< HEAD
         className="splash-fade relative m-0 text-[14px] font-bold text-[#9FB0E8]"
-=======
-        className="splash-fade relative m-0 text-sm font-bold text-[#9FB0E8]"
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
         style={{ animationDelay: "1.05s" }}
       >
         Warming up the pitch…

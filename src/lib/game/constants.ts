@@ -4,16 +4,10 @@
 export { themeFor, styleFor, levelForValue } from "./jerseyConfig.ts";
 export type { JerseyStyle, JerseyTier } from "./jerseyConfig.ts";
 
-<<<<<<< HEAD
 /** Logical play-field size (canvas is scaled to fit, DPR handled separately).
  * Taller field = more vertical room for the pile (walls/floor derive from this). */
 export const BOARD_W = 420;
 export const BOARD_H = 720;
-=======
-/** Logical play-field size (canvas is scaled to fit, DPR handled separately). */
-export const BOARD_W = 420;
-export const BOARD_H = 620;
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
 /** Jerseys resting above this line (for too long) end the game. */
 export const DANGER_Y = 96;

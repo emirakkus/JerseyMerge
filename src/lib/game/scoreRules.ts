@@ -32,7 +32,6 @@ export function mergeGain(baseValue: number, combo: number, rules: ComboRules = 
 }
 
 /**
-<<<<<<< HEAD
  * Flat streak bonus for long chains: every 5th link and beyond pays out
  * 10 × combo (chain 5 → +50, 10 → +100, 15 → +150 …). Stacks on top of the
  * multiplier — reward for long chains, not just the rate.
@@ -45,8 +44,6 @@ export function streakBonus(combo: number): number {
 }
 
 /**
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
  * Streak counter for a merge happening at `nowMs` (game time, so pauses are
  * safe). Extends the streak when inside the window, otherwise resets to 1.
  */

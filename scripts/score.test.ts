@@ -4,7 +4,6 @@
  */
 
 import assert from "node:assert/strict";
-<<<<<<< HEAD
 import {
   COMBO_RULES,
   comboMultiplier,
@@ -13,9 +12,6 @@ import {
   streakBonus,
   STREAK_BONUS_EVERY,
 } from "../src/lib/game/scoreRules.ts";
-=======
-import { COMBO_RULES, comboMultiplier, mergeGain, nextCombo } from "../src/lib/game/scoreRules.ts";
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 import {
   POWERUPS,
   applyEarn,
@@ -62,7 +58,6 @@ test("streak extends inside the window, resets outside", () => {
   assert.equal(nextCombo(2, null, 99999), 1);
 });
 
-<<<<<<< HEAD
 test("streak bonus: nothing below threshold, 10 x combo at and beyond it", () => {
   assert.equal(streakBonus(0), 0);
   assert.equal(streakBonus(1), 0);
@@ -73,8 +68,6 @@ test("streak bonus: nothing below threshold, 10 x combo at and beyond it", () =>
   assert.equal(streakBonus(16), 160);
 });
 
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 test("custom rules are respected", () => {
   const rules = { windowMs: 500, perStep: 0.5, cap: 1.5 };
   assert.equal(comboMultiplier(3, rules), 1.5);

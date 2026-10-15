@@ -27,12 +27,8 @@ export const POWERUPS: readonly PowerupConfig[] = [
     start: 1,
     max: 2,
     earnAt: 64,
-<<<<<<< HEAD
     description:
       "Turns the first jersey it touches into the next value. Scores exactly like a normal merge (combo rules apply).",
-=======
-    description: "Merges with any jersey it touches, upgrading it one size.",
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   },
   {
     id: "bomb",
@@ -41,11 +37,7 @@ export const POWERUPS: readonly PowerupConfig[] = [
     start: 1,
     max: 2,
     earnAt: 128,
-<<<<<<< HEAD
     description: "Clears every jersey in its blast radius. No score effect — pure space.",
-=======
-    description: "Blasts clear the area: opens space, no score penalty.",
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   },
   {
     id: "scramble",
@@ -53,11 +45,7 @@ export const POWERUPS: readonly PowerupConfig[] = [
     key: "K",
     start: 1,
     max: 2,
-<<<<<<< HEAD
     description: "Bursts the whole pile apart to open space. No score effect.",
-=======
-    description: "Shuffles the pile with a light physics burst.",
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   },
   {
     id: "undo",
@@ -65,12 +53,8 @@ export const POWERUPS: readonly PowerupConfig[] = [
     key: "Z",
     start: 1,
     max: 1,
-<<<<<<< HEAD
     description:
       "Reverts your last drop and everything since: jersey, merges, score, mission progress and power-ups used after it. Badges and records stay.",
-=======
-    description: "Takes back your last drop and everything it caused.",
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   },
 ];
 

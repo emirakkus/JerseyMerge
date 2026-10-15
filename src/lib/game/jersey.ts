@@ -127,7 +127,6 @@ function drawTierPattern(ctx: CanvasRenderingContext2D, s: number, st: JerseySty
         ctx.fillRect(-1.2 * s, -0.3 * s, 2.4 * s, 0.12 * s);
         ctx.restore();
       }
-<<<<<<< HEAD
       // sparkle accents clearly separate tier 5 from the flat tiers
       ctx.fillStyle = "rgba(255,255,255,0.85)";
       starPath(ctx, -0.37 * s, -0.2 * s, 0.055 * s);
@@ -160,27 +159,6 @@ function drawTierPattern(ctx: CanvasRenderingContext2D, s: number, st: JerseySty
       starPath(ctx, 0.37 * s, 0.5 * s, 0.045 * s);
       ctx.fill();
       starPath(ctx, 0.3 * s, -0.36 * s, 0.04 * s);
-=======
-      break;
-    }
-    case 6: {
-      // champion star on the chest (the value number sits below it)
-      starPath(ctx, 0, -0.05 * s, 0.19 * s);
-      ctx.fillStyle = JERSEY_OUTLINE;
-      ctx.fill();
-      starPath(ctx, 0, -0.05 * s, 0.14 * s);
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fill();
-      starPath(ctx, 0, -0.05 * s, 0.085 * s);
-      ctx.fillStyle = JERSEY_OUTLINE;
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.9)";
-      starPath(ctx, -0.36 * s, -0.24 * s, 0.05 * s);
-      ctx.fill();
-      starPath(ctx, 0.37 * s, 0.5 * s, 0.045 * s);
-      ctx.fill();
-      starPath(ctx, 0.3 * s, -0.33 * s, 0.04 * s);
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       ctx.fill();
       break;
     }
@@ -191,7 +169,6 @@ function drawTierPattern(ctx: CanvasRenderingContext2D, s: number, st: JerseySty
 
 /** Sticker jersey: flat/gradient fill, tier pattern, collar, level number, thick outline. */
 export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyStyle): void {
-<<<<<<< HEAD
   // champion (tier 6) gets a soft gold halo so it reads as premium at a glance
   if (st.tier === 6) {
     const glow = ctx.createRadialGradient(0, 0.1 * s, 0.2 * s, 0, 0.1 * s, 1.22 * s);
@@ -203,8 +180,6 @@ export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyS
     ctx.arc(0, 0.1 * s, 1.22 * s, 0, Math.PI * 2);
     ctx.fill();
   }
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   // base fill (flat or gradient for tiers 5-6)
   silhouettePath(ctx, s);
   if (st.tier >= 5) {
@@ -253,30 +228,18 @@ export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyS
   ctx.fillStyle = st.number;
   ctx.fillText(digits, 0, 0.24 * s);
 
-<<<<<<< HEAD
   // gold trim (thicker for the champion tier)
   if (st.tier >= 5 && st.trim) {
     silhouettePath(ctx, s);
     ctx.strokeStyle = st.trim;
     ctx.lineWidth = s * (st.tier === 6 ? 0.095 : 0.075);
-=======
-  // gold trim under a thin dark rim (tiers 5-6)
-  if (st.tier >= 5 && st.trim) {
-    silhouettePath(ctx, s);
-    ctx.strokeStyle = st.trim;
-    ctx.lineWidth = s * 0.075;
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     ctx.lineJoin = "round";
     ctx.stroke();
   }
   // thick sticker outline
   silhouettePath(ctx, s);
   ctx.strokeStyle = JERSEY_OUTLINE;
-<<<<<<< HEAD
   ctx.lineWidth = s * (st.tier === 6 ? 0.045 : st.tier >= 5 ? 0.04 : 0.055);
-=======
-  ctx.lineWidth = s * (st.tier >= 5 ? 0.04 : 0.055);
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   ctx.lineJoin = "round";
   ctx.stroke();
 }

@@ -67,11 +67,7 @@ canvas {
   display: block;
 }
 
-<<<<<<< HEAD
 /* ---- Game layout: portrait-first (stacked), landscape/desktop (3 columns) ---- */
-=======
-/* ---- Game layout: portrait-first, landscape splits to sides ---- */
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
 .game-layout {
   display: flex;
@@ -79,17 +75,12 @@ canvas {
   gap: var(--jm-space-4);
 }
 .layout-left,
-<<<<<<< HEAD
 .layout-right,
 .layout-board {
-=======
-.layout-right {
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   display: flex;
   flex-direction: column;
   gap: var(--jm-space-3);
   width: 100%;
-<<<<<<< HEAD
   min-width: 0;
 }
 
@@ -142,31 +133,6 @@ canvas {
     grid-template-columns: 196px minmax(0, 1fr) 206px;
     align-items: start;
     gap: var(--jm-space-4);
-=======
-}
-
-@media (orientation: landscape) and (max-height: 600px) {
-  .game-layout {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: var(--jm-space-3);
-  }
-  .layout-left {
-    order: 1;
-    width: 148px;
-    flex: 0 0 auto;
-  }
-  .layout-board {
-    order: 2;
-    flex: 0 1 auto;
-    max-width: calc((100dvh - 56px) * 0.6774);
-  }
-  .layout-right {
-    order: 3;
-    width: 168px;
-    flex: 0 0 auto;
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   }
   .layout-right .powerup-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

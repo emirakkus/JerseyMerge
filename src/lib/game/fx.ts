@@ -33,7 +33,6 @@ interface Ring {
   color: string;
 }
 
-<<<<<<< HEAD
 interface Flash {
   x: number;
   y: number;
@@ -43,18 +42,13 @@ interface Flash {
   color: string;
 }
 
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 
 export class FxSystem {
   private particles: Particle[] = [];
   private floaters: Floater[] = [];
   private rings: Ring[] = [];
-<<<<<<< HEAD
   private flashes: Flash[] = [];
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   shake = 0;
   private reducedMotion = false;
 
@@ -95,15 +89,12 @@ export class FxSystem {
     this.rings.push({ x, y, maxR, life: 0, ttl: 320, color });
   }
 
-<<<<<<< HEAD
   /** Quick soft flash disc at the merge point (skipped under reduced motion). */
   flash(x: number, y: number, r: number, color: string, ttl = 200): void {
     if (this.reducedMotion) return;
     this.flashes.push({ x, y, r, life: 0, ttl, color });
   }
 
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   floater(x: number, y: number, text: string, color: string, size: number): void {
     this.floaters.push({ x, y, text, life: 0, ttl: 780, color, size });
   }
@@ -123,11 +114,8 @@ export class FxSystem {
     this.floaters = this.floaters.filter((f) => f.life < f.ttl);
     for (const r of this.rings) r.life += dt;
     this.rings = this.rings.filter((r) => r.life < r.ttl);
-<<<<<<< HEAD
     for (const f of this.flashes) f.life += dt;
     this.flashes = this.flashes.filter((f) => f.life < f.ttl);
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.shake *= Math.pow(0.88, k);
     if (this.shake < 0.05) this.shake = 0;
   }
@@ -141,7 +129,6 @@ export class FxSystem {
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
-<<<<<<< HEAD
     for (const f of this.flashes) {
       const t = f.life / f.ttl;
       ctx.globalAlpha = (1 - t) * 0.55;
@@ -152,8 +139,6 @@ export class FxSystem {
     }
     ctx.globalAlpha = 1;
 
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     for (const r of this.rings) {
       const t = r.life / r.ttl;
       const radius = r.maxR * easeOutCubic(t);
@@ -204,10 +189,7 @@ export class FxSystem {
     this.particles = [];
     this.floaters = [];
     this.rings = [];
-<<<<<<< HEAD
     this.flashes = [];
-=======
->>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.shake = 0;
   }
 }
