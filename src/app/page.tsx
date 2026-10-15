@@ -26,7 +26,11 @@ import { utcDayKey } from "@/lib/game/prng";
 import {
   DailyQuestTracker,
   emptyCounters,
+<<<<<<< HEAD
   getSimpleDailyQuests,
+=======
+  getDailyQuests,
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   questProgress,
   type QuestCounters,
 } from "@/lib/daily/quests";
@@ -52,7 +56,10 @@ import { loadProgress, saveProgress } from "@/lib/progress/local";
 import type { ProgressDto, ProgressSyncResult } from "@/lib/progress/api";
 import type { ProgressState } from "@/lib/progress/types";
 import { ProgressOverlay } from "@/components/game/ProgressOverlay";
+<<<<<<< HEAD
 import { LeaderboardModal } from "@/components/game/LeaderboardModal";
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 import { api, getCachedUser, getToken, setToken, type ApiUser } from "@/lib/api";
 import {
   addLifetimeStats,
@@ -114,7 +121,10 @@ export default function HomePage() {
   const trackerRef = useRef<DailyQuestTracker | null>(null);
   const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
   const [progressOpen, setProgressOpen] = useState(false);
+<<<<<<< HEAD
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   const [toast, setToast] = useState<{ key: number; name: string; xp: number } | null>(null);
   const [sessionTrophies, setSessionTrophies] = useState<string[]>([]);
   const progressTrackerRef = useRef<ProgressTracker | null>(null);
@@ -184,6 +194,7 @@ export default function HomePage() {
     progressTrackerRef.current = new ProgressTracker(loadProgress());
     loadDailyState();
 
+<<<<<<< HEAD
     // Simple daily quests: fixed set, same for everyone, every day.
     setDailyMeta((m) => ({
       seed: m?.seed ?? 0,
@@ -195,6 +206,8 @@ export default function HomePage() {
       dailyBest: m?.dailyBest ?? null,
     }));
 
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     refreshGlobal();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshGlobal]);
@@ -290,7 +303,11 @@ export default function HomePage() {
       // "Most advanced wins": merge incoming cloud state before storing.
       if (remote) t.state = mergeProgress(t.state, remote);
       saveProgress(t.state);
+<<<<<<< HEAD
       setProgress({ xp: t.state.xp, counters: { ...t.state.counters }, achievements: [...t.state.achievements], skins: [...t.state.skins] });
+=======
+      setProgress({ xp: t.state.xp, counters: { ...t.state.counters }, achievements: [...t.state.achievements] });
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       if (user) {
         api<ProgressSyncResult>("/api/progress", { method: "POST", body: JSON.stringify(t.state) }).catch(
           () => {
@@ -313,11 +330,14 @@ export default function HomePage() {
       const pt = progressTrackerRef.current;
       if (!pt) return;
       pt.handleEvent(e);
+<<<<<<< HEAD
       // Collection points: 1 point per merge, 5 per new trophy.
       if (e.type === "merge") {
         const c = pt.state.counters;
         c.collectionPoints += 1;
       }
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       const fresh = pt.drainUnlocked();
       if (fresh.length > 0) {
         setSessionTrophies((prev) => [...prev, ...fresh.map((f) => f.id)]);
@@ -325,6 +345,7 @@ export default function HomePage() {
         setToast({ key: Date.now(), name: last.name, xp: last.rewardXp });
         if (toastTimer.current !== null) window.clearTimeout(toastTimer.current);
         toastTimer.current = window.setTimeout(() => setToast(null), 3600);
+<<<<<<< HEAD
         pt.state.counters.collectionPoints += 5 * fresh.length;
         persistProgress();
       }
@@ -335,6 +356,10 @@ export default function HomePage() {
         if (dayKey) saveCounters(dayKey, c);
         setQuestCounters({ ...c });
       }
+=======
+        persistProgress();
+      }
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     },
     [dayKey, persistProgress]
   );
@@ -342,7 +367,11 @@ export default function HomePage() {
   const claimQuest = useCallback(
     (questId: string) => {
       if (!dayKey) return;
+<<<<<<< HEAD
       const quest = getSimpleDailyQuests().find((q) => q.id === questId);
+=======
+      const quest = getDailyQuests(dayKey).find((q) => q.id === questId);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       if (!quest) return;
       if (user) {
         api<{ reward: { questId: string; powerup: string }; claimed: string[] }>(
@@ -589,10 +618,17 @@ export default function HomePage() {
         </div>
       )}
 
+<<<<<<< HEAD
       <main className="safe-area-main mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-3.5 min-[900px]:max-w-[840px]">
         <header className="mx-auto flex w-full max-w-[560px] items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFC93C] shadow-[0_3px_0_#D9A406]">
+=======
+      <main className="safe-area-main mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-4">
+        <header className="mx-auto flex w-full max-w-[560px] items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFC93C] shadow-[0_3px_0_#D9A406]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   d="M8.5 3.5 3 6l1.5 4 2-1v9.5h11V9l2 1L21 6l-5.5-2.5a4.5 4.5 0 0 1-7 0Z"
@@ -608,13 +644,21 @@ export default function HomePage() {
               <h1 className="m-0 font-display text-[22px] leading-none tracking-tight text-white">
                 JERSEY MERGE
               </h1>
+<<<<<<< HEAD
               <p className="m-0 mt-1 text-[13px] font-semibold text-[#9FB0E8]">Merge the kit up to level 11</p>
+=======
+              <p className="m-0 mt-1 text-xs font-semibold text-[#9FB0E8]">Merge the kit up to level 11</p>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span
               title={`Player level ${lvlInfo.level} · ${progress.xp.toLocaleString()} XP`}
+<<<<<<< HEAD
               className="hidden h-12 items-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10 min-[380px]:flex"
+=======
+              className="hidden h-11 items-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10 min-[380px]:flex"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               <svg width="14" height="14" viewBox="0 0 16 16" className="text-[#FFC93C]" aria-hidden="true">
                 <path d="M8 1.5 9.9 6l4.6.3-3.5 3 1.1 4.5L8 11.2l-4.1 2.6 1.1-4.5-3.5-3L6.1 6z" fill="currentColor" />
@@ -630,7 +674,11 @@ export default function HomePage() {
             {streak > 0 && (
               <span
                 title={`${streak} day login streak (resets if a UTC day is missed)`}
+<<<<<<< HEAD
                 className="flex h-12 items-center gap-1 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10"
+=======
+                className="flex h-11 items-center gap-1 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" className="text-orange-400" aria-hidden="true">
                   <path
@@ -645,7 +693,11 @@ export default function HomePage() {
               type="button"
               onClick={openAuth}
               aria-label={user ? `Account: ${user.username}` : "Sign in or create account"}
+<<<<<<< HEAD
               className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+=======
+              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               {user ? (
                 <>
@@ -671,7 +723,11 @@ export default function HomePage() {
               type="button"
               onClick={() => setProgressOpen(true)}
               aria-label="Open my club: kit collection and achievements"
+<<<<<<< HEAD
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+=======
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
                 <path
@@ -687,7 +743,11 @@ export default function HomePage() {
               type="button"
               onClick={scrollToLeaderboard}
               aria-label="View leaderboard"
+<<<<<<< HEAD
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+=======
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
                 <path
@@ -704,7 +764,11 @@ export default function HomePage() {
               onClick={toggleMute}
               aria-label={muted ? "Unmute sound" : "Mute sound"}
               aria-pressed={muted}
+<<<<<<< HEAD
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+=======
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               {muted ? (
                 <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
@@ -727,6 +791,7 @@ export default function HomePage() {
           </div>
         </header>
 
+<<<<<<< HEAD
         {/* HUD spans the full width at the top: skor / süre / sıradaki / rekor */}
         <div className="mx-auto w-full max-w-[560px] min-[900px]:max-w-none">
           <GameHUD score={score} best={best} next={next} timeMs={timerMs} />
@@ -734,6 +799,12 @@ export default function HomePage() {
 
         <div className="game-layout">
           <div className="layout-left">
+=======
+        <div className="game-layout">
+          <div className="layout-left">
+            <GameHUD score={score} best={best} next={next} timeMs={timerMs} />
+
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             <LevelStrip
               score={score}
               modeLabel={mode === "daily" && dayKey ? `DAILY ${dayKey.slice(5)}` : undefined}
@@ -766,14 +837,21 @@ export default function HomePage() {
               <MainMenu
                 best={best}
                 top={top}
+<<<<<<< HEAD
                 globalTop={globalTop}
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 missions={missions}
                 ownedBadges={badges}
                 user={user}
                 daily={{
                   dayKey,
                   seed: dailyMeta?.seed ?? 0,
+<<<<<<< HEAD
                   quests: getSimpleDailyQuests(),
+=======
+                  quests: dailyMeta?.quests ?? [],
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   board: dailyMeta?.board ?? [],
                   streak: dailyMeta?.streak ?? streak,
                   claimed: dailyMeta?.claimed ?? loadClaimed(dayKey),
@@ -809,12 +887,18 @@ export default function HomePage() {
           </section>
 
           <div className="layout-right">
+<<<<<<< HEAD
+=======
+            {status !== "idle" && <MissionStrip missions={missions} />}
+
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             <PowerupBar
               snapshot={powerups}
               canPlay={status === "playing"}
               onUse={usePowerup}
             />
 
+<<<<<<< HEAD
             {/* Hamburger menu: pause/resume, restart, leaderboard, how to play */}
           <details className="group relative">
             <summary
@@ -840,10 +924,20 @@ export default function HomePage() {
                 <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
                   <path d="M6 4v8M10 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
+=======
+            <div className="controls-row flex gap-2">
+              <button
+                type="button"
+                onClick={togglePause}
+                disabled={status !== "playing" && status !== "paused"}
+                className="min-h-[44px] flex-1 rounded-xl bg-[#FFC93C] px-4 py-2.5 text-sm font-extrabold text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
+              >
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 {status === "paused" ? "Resume" : "Pause"}
               </button>
               <button
                 type="button"
+<<<<<<< HEAD
                 onClick={() => {
                   const d = document.querySelector("details[open]") as HTMLDetailsElement | null;
                   if (d) d.open = false;
@@ -905,6 +999,68 @@ export default function HomePage() {
         <footer className="pb-1 text-center text-[12px] font-medium text-[#8B97C9]">
           Physics by Matter.js · How to play and the leaderboard live in the main menu
         </footer>
+=======
+                onClick={startGame}
+                disabled={status === "idle"}
+                className="min-h-[44px] flex-1 rounded-xl bg-[#1B2450] px-4 py-2.5 text-sm font-extrabold text-white ring-1 ring-white/15 transition hover:bg-[#232E63] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                Restart
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-[520px]">
+          <Leaderboard entries={globalTop} highlightName={user?.username ?? null} />
+
+          <section className="rounded-2xl bg-[#1B2450]/50 p-4 ring-1 ring-white/10">
+            <h2 className="m-0 text-[11px] font-bold uppercase tracking-[0.16em] text-[#9FB0E8]">How to play</h2>
+            <ul className="m-0 mt-2.5 list-none space-y-2 text-[13px] font-medium leading-snug text-[#C7CCEA]">
+              <li>
+                <span className="font-bold text-white">Drop:</span> move with your mouse, finger or the arrow
+                keys, then click, tap or press Space.
+              </li>
+              <li>
+                <span className="font-bold text-white">Merge:</span> two identical jerseys become the next
+                level — 1 + 1 = 2, 2 + 2 = 4, up to the golden level 11.
+              </li>
+              <li>
+                <span className="font-bold text-white">Danger:</span> a resting jersey above the red line ends
+                the match after a short grace period.
+              </li>
+              <li>
+                <span className="font-bold text-white">Power-ups:</span> Joker merges with anything it touches,
+                Bomb clears an area, Scramble shuffles the pile, Undo takes back your last drop. Keys J / B / K / Z.
+              </li>
+              <li>
+                <span className="font-bold text-white">Combo:</span> chain merges within 1.5s for up to a 2×
+                score multiplier.
+              </li>
+            </ul>
+            <p className="m-0 mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-white/10 pt-3 text-[11px] font-semibold text-[#9FB0E8]">
+              <span>
+                <Kbd>Space</Kbd> drop
+              </span>
+              <span>
+                <Kbd>←</Kbd> <Kbd>→</Kbd> aim
+              </span>
+              <span>
+                <Kbd>P</Kbd> pause
+              </span>
+              <span>
+                <Kbd>R</Kbd> restart
+              </span>
+              <span>
+                <Kbd>J</Kbd><Kbd>B</Kbd><Kbd>K</Kbd><Kbd>Z</Kbd> power-ups
+              </span>
+            </p>
+          </section>
+
+          <footer className="pb-1 text-center text-[11px] font-medium text-[#8B97C9]">
+            Physics by Matter.js · Sign in to keep your progress on your account
+          </footer>
+        </div>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       </main>
 
       {authOpen && (
@@ -919,6 +1075,7 @@ export default function HomePage() {
 
       {progressOpen && <ProgressOverlay progress={progress} onClose={() => setProgressOpen(false)} />}
 
+<<<<<<< HEAD
       {leaderboardOpen && (
         <LeaderboardModal
           entries={globalTop}
@@ -927,6 +1084,8 @@ export default function HomePage() {
         />
       )}
 
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       {/* Accessible achievement toast (screen readers announce via aria-live). */}
       <div aria-live="polite" role="status" className="pointer-events-none fixed bottom-4 left-1/2 z-[60] -translate-x-1/2">
         {toast && (
@@ -960,7 +1119,11 @@ export default function HomePage() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
+<<<<<<< HEAD
     <kbd className="rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-sans text-[12px] text-[#C7CCEA]">
+=======
+    <kbd className="rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-sans text-[10px] text-[#C7CCEA]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       {children}
     </kbd>
   );

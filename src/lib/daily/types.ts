@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import type { DailyQuest, QuestCounters } from "./quests";
+=======
+import type { DailyQuest } from "./quests";
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
 /** Shared request/response types used by route handlers AND the client. */
 
@@ -14,7 +18,10 @@ export interface DailyStateYou {
   dailyBest: number | null;
   dailyRank: number | null;
   claimed: string[];
+<<<<<<< HEAD
   questCounters: QuestCounters;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 }
 
 export interface DailyStateResponse {

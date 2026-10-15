@@ -60,18 +60,32 @@ export function GameOverModal({
 
         <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
+<<<<<<< HEAD
             <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-[#FFC93C]">Skor</p>
             <p className="m-0 mt-1 font-display text-[24px] tabular-nums text-[#FFC93C]">
+=======
+            <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#FFC93C]">Skor</p>
+            <p className="m-0 mt-1 font-display text-[22px] tabular-nums text-[#FFC93C]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               {score.toLocaleString()}
             </p>
           </div>
           <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
+<<<<<<< HEAD
             <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-white/70">Süre</p>
             <p className="m-0 mt-1 font-display text-[24px] tabular-nums text-white">{formatTime(timeMs)}</p>
           </div>
           <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
             <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-[#2EC4B6]">Rekor</p>
             <p className="m-0 mt-1 font-display text-[24px] tabular-nums text-[#2EC4B6]">
+=======
+            <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.1em] text-white/60">Süre</p>
+            <p className="m-0 mt-1 font-display text-[22px] tabular-nums text-white">{formatTime(timeMs)}</p>
+          </div>
+          <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
+            <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#2EC4B6]">Rekor</p>
+            <p className="m-0 mt-1 font-display text-[22px] tabular-nums text-[#2EC4B6]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               {best.toLocaleString()}
             </p>
           </div>
@@ -83,16 +97,28 @@ export function GameOverModal({
               Daily challenge · {daily.dayKey}
             </p>
             {daily.isGuest ? (
+<<<<<<< HEAD
               <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#C7CCEA]">
                 Guest run: not submitted to the daily board. Sign in to compete for the rank.
               </p>
             ) : daily.error ? (
               <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#C7CCEA]">
+=======
+              <p className="m-0 mt-1 text-[12px] font-semibold leading-snug text-[#C7CCEA]">
+                Guest run: not submitted to the daily board. Sign in to compete for the rank.
+              </p>
+            ) : daily.error ? (
+              <p className="m-0 mt-1 text-[12px] font-semibold leading-snug text-[#C7CCEA]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 Could not submit right now (offline or server busy). Your next run will count.
               </p>
             ) : (
               <div className="mt-1 flex items-center justify-between">
+<<<<<<< HEAD
                 <span className="text-[13px] font-bold text-[#C7CCEA]">Daily board rank</span>
+=======
+                <span className="text-[12px] font-bold text-[#C7CCEA]">Daily board rank</span>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 <span className="font-display text-lg text-white">
                   #{daily.rank} · best {daily.best?.toLocaleString()}
                 </span>
@@ -167,14 +193,22 @@ export function GameOverModal({
             </p>
             <ol className="m-0 mt-1.5 list-none space-y-1.5">
               {top.slice(0, 5).map((entry, i) => (
+<<<<<<< HEAD
                 <li key={`${entry.at}-${i}`} className="flex items-center gap-2 text-[14px]">
+=======
+                <li key={`${entry.at}-${i}`} className="flex items-center gap-2 text-sm">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   <span
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold ${rankBadgeClass(i)}`}
                   >
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-left font-bold text-white">{entry.name}</span>
+<<<<<<< HEAD
                   <span className="text-[11.5px] font-semibold tabular-nums text-[#9FB0E8]">
+=======
+                  <span className="text-[10px] font-semibold tabular-nums text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                     {entry.timeMs > 0 ? formatTime(entry.timeMs) : ""}
                   </span>
                   <span
@@ -195,19 +229,31 @@ export function GameOverModal({
             type="button"
             onClick={onPlayAgain}
             autoFocus
+<<<<<<< HEAD
             className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
+=======
+            className="min-h-[52px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           >
             PLAY AGAIN!
           </button>
           <button
             type="button"
             onClick={onMenu}
+<<<<<<< HEAD
             className="min-h-[48px] rounded-2xl px-5 py-2.5 text-[14px] font-extrabold text-[#C7CCEA] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
+=======
+            className="min-h-[44px] rounded-2xl px-5 py-2.5 text-sm font-extrabold text-[#C7CCEA] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           >
             Main menu
           </button>
         </div>
+<<<<<<< HEAD
         <p className="m-0 mt-3 text-[12.5px] font-semibold text-[#9FB0E8]">
+=======
+        <p className="m-0 mt-3 text-[11px] font-semibold text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           Tip: press <kbd className="rounded-md bg-white/10 px-1.5 py-0.5 font-sans text-[#C7CCEA]">R</kbd> for an
           instant restart
         </p>

@@ -18,7 +18,10 @@ export class ProgressTracker {
           xp: Math.max(0, Math.floor(initial.xp)),
           counters: { ...emptyProgress().counters, ...initial.counters },
           achievements: [...initial.achievements],
+<<<<<<< HEAD
           skins: [...initial.skins],
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
         }
       : emptyProgress();
   }

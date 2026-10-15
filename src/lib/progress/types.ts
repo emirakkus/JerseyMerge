@@ -11,15 +11,21 @@ export interface LifetimeCounters {
   bomb: number;
   scramble: number;
   undo: number;
+<<<<<<< HEAD
   collectionPoints: number;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 }
 
 export interface ProgressState {
   xp: number;
   counters: LifetimeCounters;
   achievements: string[];
+<<<<<<< HEAD
   /** Unlocked cosmetic skin ids (purely visual). */
   skins: string[];
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 }
 
 /** All collectible kit values (fictional designs — see collection screen). */
@@ -39,9 +45,14 @@ export function emptyProgress(): ProgressState {
       bomb: 0,
       scramble: 0,
       undo: 0,
+<<<<<<< HEAD
       collectionPoints: 0,
     },
     achievements: [],
     skins: [],
+=======
+    },
+    achievements: [],
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   };
 }

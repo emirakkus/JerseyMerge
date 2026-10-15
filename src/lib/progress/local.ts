@@ -22,7 +22,10 @@ export function loadProgress(): ProgressState {
       xp: clean(p.xp),
       counters: { ...base.counters, ...(typeof p.counters === "object" && p.counters !== null ? (p.counters as object) : {}) },
       achievements: Array.isArray(p.achievements) ? p.achievements.filter((a): a is string => typeof a === "string") : [],
+<<<<<<< HEAD
       skins: Array.isArray(p.skins) ? p.skins.filter((s): s is string => typeof s === "string") : [],
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     };
   } catch {
     return emptyProgress();

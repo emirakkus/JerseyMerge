@@ -154,7 +154,11 @@ export function GameBoard({ gameRef, onScore, onNext, onGameOver, onMissions, on
     <div
       ref={wrapRef}
       className="relative w-full overflow-hidden rounded-xl bg-[#0d1531]"
+<<<<<<< HEAD
       style={{ aspectRatio: "420 / 720" }}
+=======
+      style={{ aspectRatio: "420 / 620" }}
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     >
       <canvas
         ref={canvasRef}

@@ -43,6 +43,7 @@ function write(key: string, value: unknown): void {
 /** Counters for the given UTC day (fresh when the stored day differs). */
 export function loadCounters(dayKey: string): QuestCounters {
   const stored = read<{ dayKey: string; counters: QuestCounters }>(COUNTERS_KEY);
+<<<<<<< HEAD
   if (stored && stored.dayKey === dayKey && stored.counters) {
     const c = stored.counters;
     return {
@@ -56,6 +57,9 @@ export function loadCounters(dayKey: string): QuestCounters {
       collectionPoints: c.collectionPoints ?? 0,
     };
   }
+=======
+  if (stored && stored.dayKey === dayKey && stored.counters) return stored.counters;
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   return emptyCounters();
 }
 

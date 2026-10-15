@@ -8,7 +8,11 @@ import { hashSeed, mulberry32 } from "../game/prng.ts";
  * only feeds it events via DailyQuestTracker.
  */
 
+<<<<<<< HEAD
 export type QuestMetric = "merges" | "reachValue" | "maxCombo" | "score" | "drops" | "powerupsUsed" | "matches" | "collectionPoints";
+=======
+export type QuestMetric = "merges" | "reachValue" | "maxCombo" | "score" | "drops" | "powerupsUsed";
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
 export interface DailyQuest {
   id: string;
@@ -33,6 +37,7 @@ const QUEST_POOL: readonly QuestDef[] = [
   { id: "score", metric: "score", targets: [150, 200, 300], reward: "joker", title: (t) => `Score ${t} in one match` },
   { id: "drops", metric: "drops", targets: [10, 12, 15], reward: "scramble", title: (t) => `Drop ${t} jerseys` },
   { id: "powerups", metric: "powerupsUsed", targets: [1, 2, 2], reward: "bomb", title: (t) => `Use ${t} power-up${t > 1 ? "s" : ""}` },
+<<<<<<< HEAD
   { id: "matches", metric: "matches", targets: [3, 3, 5], reward: "joker", title: (t) => `Complete ${t} matches` },
   { id: "collection", metric: "collectionPoints", targets: [5, 10, 15], reward: "bomb", title: (t) => `Earn ${t} collection points` },
 ];
@@ -48,6 +53,10 @@ export function getSimpleDailyQuests(): DailyQuest[] {
   return SIMPLE_DAILY_QUESTS.map((q) => ({ ...q }));
 }
 
+=======
+];
+
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 export function getDailyQuests(dayKey: string): DailyQuest[] {
   const rng = mulberry32(hashSeed(`jersey-merge-quests-${dayKey}`));
   const pool = [...QUEST_POOL];
@@ -73,12 +82,19 @@ export interface QuestCounters {
   score: number;
   drops: number;
   powerupsUsed: number;
+<<<<<<< HEAD
   matches: number;
   collectionPoints: number;
 }
 
 export function emptyCounters(): QuestCounters {
   return { merges: 0, maxValue: 0, maxCombo: 0, score: 0, drops: 0, powerupsUsed: 0, matches: 0, collectionPoints: 0 };
+=======
+}
+
+export function emptyCounters(): QuestCounters {
+  return { merges: 0, maxValue: 0, maxCombo: 0, score: 0, drops: 0, powerupsUsed: 0 };
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 }
 
 export function questProgress(q: DailyQuest, c: QuestCounters): number {
@@ -95,10 +111,13 @@ export function questProgress(q: DailyQuest, c: QuestCounters): number {
       return c.drops;
     case "powerupsUsed":
       return c.powerupsUsed;
+<<<<<<< HEAD
     case "matches":
       return c.matches;
     case "collectionPoints":
       return c.collectionPoints;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     default:
       return 0;
   }
@@ -136,9 +155,12 @@ export class DailyQuestTracker {
       case "score":
         this.counters.score = Math.max(this.counters.score, e.total);
         break;
+<<<<<<< HEAD
       case "gameover":
         this.counters.matches += 1;
         break;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       default:
         break;
     }

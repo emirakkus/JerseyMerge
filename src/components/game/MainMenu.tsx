@@ -93,7 +93,10 @@ export interface DailyBundle {
 interface MainMenuProps {
   best: number;
   top: ScoreEntry[];
+<<<<<<< HEAD
   globalTop: ScoreEntry[];
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   missions: MissionView[];
   ownedBadges: string[];
   user: ApiUser | null;
@@ -107,7 +110,10 @@ interface MainMenuProps {
 export function MainMenu({
   best,
   top,
+<<<<<<< HEAD
   globalTop,
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   missions,
   ownedBadges,
   user,
@@ -156,7 +162,11 @@ export function MainMenu({
           <h1 className="menu-title m-0 text-center font-display text-[30px] font-extrabold leading-none tracking-tight">
             {s("title")}
           </h1>
+<<<<<<< HEAD
           <p className="menu-tagline m-0 px-4 text-center text-[14px] font-bold text-[#9FB0E8]">
+=======
+          <p className="menu-tagline m-0 px-4 text-center text-[12.5px] font-bold text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             {s("tagline")}
           </p>
           <div className="menu-hero relative mx-2 h-[96px] w-auto" aria-hidden="true">
@@ -176,6 +186,7 @@ export function MainMenu({
         <div className="menu-main flex min-h-0 flex-1 flex-col gap-3">
           <div className="flex gap-2">
             {user ? (
+<<<<<<< HEAD
               <div className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/10 px-3 py-2 ring-1 ring-[#2EC4B6]/40">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2EC4B6] font-display text-lg text-[#0F1B3D]">
                   {user.username.charAt(0).toUpperCase()}
@@ -183,15 +194,30 @@ export function MainMenu({
                 <span className="min-w-0">
                   <span className="block truncate text-[14px] font-extrabold">{user.username}</span>
                   <span className="block text-[12.5px] font-bold text-[#2EC4B6]">{s("signedIn")}</span>
+=======
+              <div className="flex min-h-[48px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/10 px-3 py-2 ring-1 ring-[#2EC4B6]/40">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2EC4B6] font-display text-lg text-[#0F1B3D]">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[13px] font-extrabold">{user.username}</span>
+                  <span className="block text-[11px] font-bold text-[#2EC4B6]">{s("signedIn")}</span>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 </span>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={onOpenAuth}
+<<<<<<< HEAD
                 className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/15 px-3.5 py-2.5 text-left ring-1 ring-[#2EC4B6]/40 transition hover:bg-[#2EC4B6]/25 active:scale-[0.99]"
               >
                 <svg width="22" height="22" viewBox="0 0 16 16" className="shrink-0 text-[#2EC4B6]" aria-hidden="true">
+=======
+                className="flex min-h-[48px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/15 px-3.5 py-2.5 text-left ring-1 ring-[#2EC4B6]/40 transition hover:bg-[#2EC4B6]/25 active:scale-[0.99]"
+              >
+                <svg width="20" height="20" viewBox="0 0 16 16" className="shrink-0 text-[#2EC4B6]" aria-hidden="true">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   <circle cx="8" cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
                   <path
                     d="M2.5 14c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5"
@@ -201,6 +227,7 @@ export function MainMenu({
                     strokeLinecap="round"
                   />
                 </svg>
+<<<<<<< HEAD
                 <span className="text-[14px] font-extrabold leading-tight">{s("signIn")}</span>
               </button>
             )}
@@ -209,6 +236,16 @@ export function MainMenu({
                 {s("best")}
               </span>
               <span className="font-display text-[17px] leading-none tabular-nums text-[#FFC93C]">
+=======
+                <span className="text-[13px] font-extrabold leading-tight">{s("signIn")}</span>
+              </button>
+            )}
+            <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-[#FFC93C]/15 px-3.5 ring-1 ring-[#FFC93C]/30">
+              <span className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
+                {s("best")}
+              </span>
+              <span className="font-display text-[15px] leading-none tabular-nums text-[#FFC93C]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 {best.toLocaleString()}
               </span>
             </div>
@@ -233,7 +270,11 @@ export function MainMenu({
                 id={`menu-tab-${tb.id}`}
                 tabIndex={tab === tb.id ? 0 : -1}
                 onClick={() => setTab(tb.id)}
+<<<<<<< HEAD
                 className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-1 text-[12.5px] font-extrabold transition ${
+=======
+                className={`flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl px-1 text-[11.5px] font-extrabold transition ${
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   tab === tb.id
                     ? "bg-[#FFC93C] text-[#0F1B3D]"
                     : "text-[#C7CCEA] hover:bg-white/5 hover:text-white"
@@ -261,7 +302,11 @@ export function MainMenu({
               />
             )}
             {tab === "how" && <HowTab s={s} />}
+<<<<<<< HEAD
             {tab === "scores" && <ScoresTab s={s} top={top} globalTop={globalTop} user={user} />}
+=======
+            {tab === "scores" && <ScoresTab s={s} top={top} />}
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             {tab === "badges" && <BadgesTab owned={ownedBadges} />}
           </div>
         </div>
@@ -273,7 +318,11 @@ export function MainMenu({
           type="button"
           onClick={onPlay}
           autoFocus
+<<<<<<< HEAD
           className="min-h-[60px] flex-[2] rounded-2xl bg-[#FFC93C] font-display text-[23px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_3px_0_#D9A406]"
+=======
+          className="min-h-[56px] flex-[2] rounded-2xl bg-[#FFC93C] font-display text-[22px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_3px_0_#D9A406]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
         >
           {s("play")}
         </button>
@@ -282,7 +331,11 @@ export function MainMenu({
           onClick={onPlayDaily}
           title={s("dailyAria")}
           aria-label={s("dailyAria")}
+<<<<<<< HEAD
           className="relative flex min-h-[60px] flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#2EC4B6] font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]"
+=======
+          className="relative flex min-h-[56px] flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#2EC4B6] font-display text-[15px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
         >
           <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
             <rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -371,20 +424,33 @@ function QuestCardView({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
+<<<<<<< HEAD
         <p className="m-0 text-[14px] font-extrabold leading-tight text-white">{quest.title}</p>
         <span className="flex shrink-0 items-center gap-1 rounded-lg bg-[#0F1B3D] px-2.5 py-1.5 text-[12.5px] font-extrabold capitalize text-[#FFC93C] ring-1 ring-[#FFC93C]/50">
+=======
+        <p className="m-0 text-[13px] font-extrabold leading-tight text-white">{quest.title}</p>
+        <span className="flex shrink-0 items-center gap-1 rounded-lg bg-[#0F1B3D] px-2 py-1 text-[11px] font-extrabold capitalize text-[#FFC93C] ring-1 ring-[#FFC93C]/50">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           <PowerupIcon id={quest.reward} />
           +1 {quest.reward}
         </span>
       </div>
       <div className="mt-2.5 flex items-center gap-2">
+<<<<<<< HEAD
         <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/10">
+=======
+        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/10">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           <div
             className={`h-full rounded-full ${state === "progress" ? "bg-[#2EC4B6]" : "bg-[#FFC93C]"}`}
             style={{ width: `${Math.round(pct * 100)}%` }}
           />
         </div>
+<<<<<<< HEAD
         <span className="shrink-0 text-[13px] font-extrabold tabular-nums text-white">
+=======
+        <span className="shrink-0 text-[11.5px] font-extrabold tabular-nums text-white">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           {shown}/{quest.target}
         </span>
       </div>
@@ -392,7 +458,11 @@ function QuestCardView({
         <button
           type="button"
           onClick={() => onClaim(quest.id)}
+<<<<<<< HEAD
           className="mt-2.5 min-h-[48px] w-full rounded-xl bg-[#FFC93C] text-[14px] font-extrabold uppercase tracking-wide text-[#0F1B3D] shadow-[0_3px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_1px_0_#D9A406]"
+=======
+          className="mt-2.5 min-h-[44px] w-full rounded-xl bg-[#FFC93C] text-[13px] font-extrabold uppercase tracking-wide text-[#0F1B3D] shadow-[0_3px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_1px_0_#D9A406]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
         >
           {s("claim")} +1 {quest.reward}
         </button>
@@ -430,10 +500,17 @@ function QuestsTab({
   return (
     <>
       <div className="flex items-center justify-between">
+<<<<<<< HEAD
         <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#2EC4B6]">
           {s("today")} · {daily.dayKey}
         </span>
         <span className="flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[12px] font-extrabold text-orange-300">
+=======
+        <span className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#2EC4B6]">
+          {s("today")} · {daily.dayKey}
+        </span>
+        <span className="flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[11px] font-extrabold text-orange-300">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           <svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true">
             <path
               d="M8 1c1 2.5 4 3.8 4 7a4 4 0 0 1-8 0c0-1.6.7-2.7 1.6-3.7C6.3 5.6 7 6.5 7.4 7.2 7.6 5.4 7.4 3 8 1Z"
@@ -451,6 +528,7 @@ function QuestsTab({
           </li>
         ))}
       </ul>
+<<<<<<< HEAD
       <p className="m-0 mt-2.5 text-center text-[12px] font-semibold text-[#9FB0E8]">{s("perMatchNote")}</p>
 
       <div className="mt-3">
@@ -465,11 +543,31 @@ function QuestsTab({
               <li key={`${e.name}-${i}`} className="flex items-center gap-2 text-[13px]">
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded text-[10px] font-extrabold ${rankBadgeClass(i)}`}
+=======
+      <p className="m-0 mt-2.5 text-center text-[10px] font-semibold text-[#9FB0E8]">{s("perMatchNote")}</p>
+
+      <div className="mt-3">
+        <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9FB0E8]">
+          {s("dailyBoard")}
+        </p>
+        {daily.board.length === 0 ? (
+          <p className="m-0 mt-1.5 text-[11px] font-semibold text-[#9FB0E8]">{s("noBoard")}</p>
+        ) : (
+          <ol className="m-0 mt-1.5 list-none space-y-1">
+            {daily.board.slice(0, 5).map((e, i) => (
+              <li key={`${e.name}-${i}`} className="flex items-center gap-2 text-[12px]">
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded text-[9px] font-extrabold ${rankBadgeClass(i)}`}
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 >
                   {i + 1}
                 </span>
                 <span className="min-w-0 flex-1 truncate font-bold text-white">{e.name}</span>
+<<<<<<< HEAD
                 <span className="tabular-nums text-[11.5px] font-semibold text-[#9FB0E8]">
+=======
+                <span className="tabular-nums text-[10px] font-semibold text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   {e.timeMs > 0 ? formatTime(e.timeMs) : ""}
                 </span>
                 <span className="w-14 text-right font-extrabold tabular-nums text-white">
@@ -480,11 +578,19 @@ function QuestsTab({
           </ol>
         )}
         {daily.yourRank !== null && (
+<<<<<<< HEAD
           <p className="m-0 mt-1.5 text-[12.5px] font-bold text-[#2EC4B6]">
             {s("yourRank")}: #{daily.yourRank} · {daily.dailyBest?.toLocaleString()}
           </p>
         )}
         <p className="m-0 mt-2 text-[12px] font-semibold leading-snug text-[#9FB0E8]">
+=======
+          <p className="m-0 mt-1.5 text-[11px] font-bold text-[#2EC4B6]">
+            {s("yourRank")}: #{daily.yourRank} · {daily.dailyBest?.toLocaleString()}
+          </p>
+        )}
+        <p className="m-0 mt-2 text-[10px] font-semibold leading-snug text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           {daily.isGuest ? s("guestDaily") : s("seedNote")}
         </p>
       </div>
@@ -508,8 +614,13 @@ function HowTab({ s }: { s: DictFn }) {
             </svg>
           </span>
           <div>
+<<<<<<< HEAD
             <p className="m-0 text-[13px] font-extrabold text-white">{rule.title}</p>
             <p className="m-0 mt-0.5 text-[12.5px] font-semibold leading-snug text-[#C7CCEA]">{rule.text}</p>
+=======
+            <p className="m-0 text-[12px] font-extrabold text-white">{rule.title}</p>
+            <p className="m-0 mt-0.5 text-[11px] font-semibold leading-snug text-[#C7CCEA]">{rule.text}</p>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           </div>
         </li>
       ))}
@@ -517,6 +628,7 @@ function HowTab({ s }: { s: DictFn }) {
   );
 }
 
+<<<<<<< HEAD
 function ScoresTab({
   s,
   top,
@@ -589,6 +701,31 @@ function ScoresTab({
         )}
       </div>
     </div>
+=======
+function ScoresTab({ s, top }: { s: DictFn; top: ScoreEntry[] }) {
+  if (top.length === 0) {
+    return <p className="m-0 py-8 text-center text-[12px] font-semibold text-[#9FB0E8]">{s("noScores")}</p>;
+  }
+  return (
+    <ol className="m-0 list-none space-y-1.5">
+      {top.slice(0, 5).map((entry, i) => (
+        <li key={`${entry.at}-${i}`} className="flex items-center gap-2 rounded-xl bg-white/5 px-2.5 py-1.5 text-sm">
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-extrabold ${rankBadgeClass(i)}`}
+          >
+            {i + 1}
+          </span>
+          <span className="min-w-0 flex-1 truncate font-bold text-white">{entry.name}</span>
+          <span className="text-[10px] font-semibold tabular-nums text-[#9FB0E8]">
+            {entry.timeMs > 0 ? formatTime(entry.timeMs) : ""}
+          </span>
+          <span className="w-16 text-right font-extrabold tabular-nums text-white">
+            {entry.score.toLocaleString()}
+          </span>
+        </li>
+      ))}
+    </ol>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   );
 }
 
@@ -624,11 +761,19 @@ function BadgesTab({ owned }: { owned: string[] }) {
                   </svg>
                 )}
               </span>
+<<<<<<< HEAD
               <span className={`text-[12px] font-extrabold leading-tight ${has ? "text-white" : "text-[#9FB0E8]"}`}>
                 {b.name}
               </span>
             </div>
             <p className="m-0 mt-1 text-[11.5px] font-semibold leading-snug text-[#9FB0E8]">{b.description}</p>
+=======
+              <span className={`text-[11px] font-extrabold leading-tight ${has ? "text-white" : "text-[#9FB0E8]"}`}>
+                {b.name}
+              </span>
+            </div>
+            <p className="m-0 mt-1 text-[10px] font-semibold leading-snug text-[#9FB0E8]">{b.description}</p>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           </div>
         );
       })}

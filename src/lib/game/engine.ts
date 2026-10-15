@@ -30,8 +30,12 @@ import { levelFor } from "./levels";
 import { refreshJerseySprites } from "./jersey";
 import { loadBest, loadOwnedBadges, saveBest, saveOwnedBadges } from "./scoring";
 import { sfx } from "./sfx";
+<<<<<<< HEAD
 import { COMBO_RULES, comboMultiplier, mergeGain, nextCombo, streakBonus } from "./scoreRules";
 import { vibrate } from "./haptics";
+=======
+import { COMBO_RULES, comboMultiplier, mergeGain, nextCombo } from "./scoreRules";
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 import { mulberry32, type Rng } from "./prng";
 import type { GameEvent } from "./events";
 import {
@@ -324,11 +328,14 @@ export class JerseyEngine {
     this.lastDropAt = now;
     this.canUndo = true;
     sfx.drop();
+<<<<<<< HEAD
     if (this.nextValue >= 64) {
       // Premium kits make a louder entrance.
       this.fx.flash(x, DROP_Y, r, "#ffd24a", 200);
       this.fx.ring(x, DROP_Y, "#ffd24a", r * 1.8);
     }
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.emitEvent({ type: "drop" });
     this.nextValue = randomSpawnValue(this.rng);
     this.callbacks.onNext(this.nextValue);
@@ -399,12 +406,16 @@ export class JerseyEngine {
       this.byId.set(body.id, jersey);
     }
 
+<<<<<<< HEAD
     const revertedScore = Math.max(0, this.score - snap.score);
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.score = snap.score;
     this.comboCount = snap.comboCount;
     this.lastMergeAt = snap.lastMergeAt;
     this.missions.restore(snap.missions);
 
+<<<<<<< HEAD
     // Show exactly what came back: the points the reverted drop had earned.
     this.fx.floater(
       BOARD_W / 2,
@@ -413,6 +424,9 @@ export class JerseyEngine {
       "#7dd3fc",
       22
     );
+=======
+    this.fx.floater(BOARD_W / 2, 160, "UNDO!", "#7dd3fc", 22);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     sfx.undo();
     this.emitEvent({ type: "powerup", id: "undo" });
     this.emitPowerups();
@@ -577,7 +591,10 @@ export class JerseyEngine {
     Matter.Composite.remove(this.engine.world, bomb.body);
     this.byId.delete(bomb.id);
     const R = BOMB_BLAST_RADIUS;
+<<<<<<< HEAD
     let cleared = 0;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     for (const j of this.jerseys) {
       const dx = j.x - bomb.x;
       const dy = j.y - bomb.y;
@@ -587,14 +604,21 @@ export class JerseyEngine {
         this.byId.delete(j.id);
         this.mergeQueue.release(j.id);
         this.burstS(j.x, j.y, ["#94a3b8", "#e2e8f0", "#64748b"], 10, 4);
+<<<<<<< HEAD
         cleared += 1;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       }
     }
     this.jerseys = this.jerseys.filter((j) => j.alive);
     this.burstS(bomb.x, bomb.y, ["#ffd24a", "#ffffff", "#94a3b8"], 30, 6);
     this.fx.ring(bomb.x, bomb.y, "#e2e8f0", R + 12);
+<<<<<<< HEAD
     // Make the effect visible: show exactly how much space was opened.
     this.fx.floater(bomb.x, bomb.y - 40, cleared > 0 ? `BOOM! ${cleared} cleared` : "BOOM!", "#fca5a5", 22);
+=======
+    this.fx.floater(bomb.x, bomb.y - 40, "BOOM!", "#fca5a5", 22);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.shakeFx(9);
     sfx.bomb();
   }
@@ -627,9 +651,14 @@ export class JerseyEngine {
     this.bestCombo = Math.max(this.bestCombo, this.comboCount);
     const mult = comboMultiplier(this.comboCount);
     const gain = mergeGain(value, this.comboCount);
+<<<<<<< HEAD
     const bonus = streakBonus(this.comboCount);
     this.emitEvent({ type: "merge", value, combo: this.comboCount });
     this.addScore(gain + bonus);
+=======
+    this.emitEvent({ type: "merge", value, combo: this.comboCount });
+    this.addScore(gain);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.missions.onMerge(value, this.comboCount);
     if (this.missions.completed.length > 0) this.settleMissions();
     this.badges.onMerge(value, this.comboCount);
@@ -637,15 +666,22 @@ export class JerseyEngine {
 
     const theme = themeFor(value);
     const colors = [theme.primary, theme.secondary, "#ffffff"];
+<<<<<<< HEAD
     // Merge moment: flash + pop + burst + ring (pop scale is in the render module).
     this.fx.flash(x, y, r * 1.25, value >= 64 ? "#ffd24a" : "#ffffff", value >= 64 ? 260 : 200);
     this.burstS(x, y, colors, Math.min(40, 12 + Math.floor(value / 16)), 4.5 + Math.min(4, value / 96));
     this.fx.ring(x, y, theme.secondary, r * 1.6);
     this.fx.floater(x, y - r * 0.35, `+${gain + bonus}`, "#ffffff", Math.min(34, 19 + value / 64));
+=======
+    this.burstS(x, y, colors, Math.min(40, 12 + Math.floor(value / 16)), 4.5 + Math.min(4, value / 96));
+    this.fx.ring(x, y, theme.secondary, r * 1.6);
+    this.fx.floater(x, y - r * 0.35, `+${gain}`, "#ffffff", Math.min(34, 19 + value / 64));
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     if (this.comboCount >= 2) {
       this.fx.floater(x, y - r - 18, `COMBO x${this.comboCount}  ${mult}×`, "#ffd24a", 19);
       this.burstS(x, y - r, ["#ffd24a", "#ffffff"], 8, 3);
       this.shakeFx(1.5);
+<<<<<<< HEAD
       sfx.comboTick(this.comboCount);
     }
     if (bonus > 0) {
@@ -667,18 +703,30 @@ export class JerseyEngine {
       this.burstS(x, y, ["#ffd24a", "#fff3b0", "#ffffff"], 34, 7);
       this.fx.flash(x, y, r * 1.7, "#fff3b0", 340);
       this.shakeFx(8);
+=======
+    }
+    if (value >= 64 && (value & (value - 1)) === 0) {
+      this.fx.floater(x, y - r - 40, `${theme.name.toUpperCase()} KIT!`, theme.secondary, 15);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     }
     for (const cfg of POWERUPS) {
       if (cfg.earnAt && value >= cfg.earnAt && this.powerups[cfg.id] < cfg.max) {
         this.powerups = applyEarn(this.powerups, cfg.id);
+<<<<<<< HEAD
         const slot = jokerUsed ? 98 : this.comboCount >= 2 ? 78 : 58;
         this.fx.floater(x, y - r - slot, `${cfg.name.toUpperCase()} +1`, "#fff3b0", 14);
+=======
+        this.fx.floater(x, y - r - (this.comboCount >= 2 ? 62 : 44), `${cfg.name.toUpperCase()} +1`, "#fff3b0", 14);
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
       }
     }
     this.shakeFx(1.5 + Math.min(8, value / 48));
     sfx.merge(value);
+<<<<<<< HEAD
     // Light haptic: bigger kits buzz a bit longer.
     vibrate(value >= 64 ? 35 : 20);
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.emitPowerups();
     this.callbacks.onCombo({ count: this.comboCount, multiplier: mult });
   }
@@ -776,7 +824,10 @@ export class JerseyEngine {
     this.status = "over";
     this.shakeFx(10);
     sfx.gameover();
+<<<<<<< HEAD
     vibrate([60, 40, 60]);
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     this.emitEvent({ type: "gameover", score: this.score });
     // React records the score (with match time + stats) via this event.
     this.callbacks.onMissions(this.missions.view());

@@ -78,6 +78,7 @@ class Sfx {
     if (value >= 64) this.tone(base * 2, 0.16, "triangle", 0.07, 0.11);
   }
 
+<<<<<<< HEAD
   /** Rising tick per chain link — the longer the chain, the higher it climbs. */
   comboTick(combo: number): void {
     this.tone(320 + Math.min(12, combo) * 70, 0.06, "triangle", 0.09);
@@ -90,6 +91,8 @@ class Sfx {
     this.tone(784, 0.12, "square", 0.08, 0.14);
   }
 
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   gameover(): void {
     this.tone(330, 0.18, "sawtooth", 0.09, 0, 220);
     this.tone(240, 0.22, "sawtooth", 0.09, 0.16, 140);

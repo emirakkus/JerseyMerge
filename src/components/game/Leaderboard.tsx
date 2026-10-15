@@ -58,15 +58,24 @@ export function Leaderboard({ entries, highlightName }: LeaderboardProps) {
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
+<<<<<<< HEAD
                 <p className="m-0 truncate text-[15px] font-bold text-white">{entry.name}</p>
                 <p className="m-0 text-[12px] font-medium text-[#9FB0E8]">
+=======
+                <p className="m-0 truncate text-sm font-bold text-white">{entry.name}</p>
+                <p className="m-0 text-[11px] font-medium text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   {entry.timeMs > 0
                     ? `${Math.floor(entry.timeMs / 60000)}:${String(Math.floor((entry.timeMs % 60000) / 1000)).padStart(2, "0")}`
                     : ""}{" "}
                   · {new Date(entry.at).toLocaleDateString()}
                 </p>
               </div>
+<<<<<<< HEAD
               <span className="font-display text-[19px] tabular-nums text-white">
+=======
+              <span className="font-display text-lg tabular-nums text-white">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 {entry.score.toLocaleString()}
               </span>
             </li>

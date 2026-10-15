@@ -5,7 +5,10 @@ import { JerseySprite } from "./JerseySprite";
 import { ACHIEVEMENTS } from "@/lib/data/achievements";
 import { levelForXp } from "@/lib/progress/xp";
 import { KIT_VALUES, type ProgressState } from "@/lib/progress/types";
+<<<<<<< HEAD
 import { SKINS, isSkinUnlocked, type SkinDef } from "@/lib/cosmetics";
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 import { themeFor } from "@/lib/game/constants";
 
 interface ProgressOverlayProps {
@@ -13,7 +16,11 @@ interface ProgressOverlayProps {
   onClose: () => void;
 }
 
+<<<<<<< HEAD
 type Tab = "kits" | "skins" | "trophies";
+=======
+type Tab = "kits" | "trophies";
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
 /** My Club: player level/XP + kit collection + achievements. Responsive for
  * narrow and landscape phones (scrollable, dvh-capped). */
@@ -21,7 +28,10 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
   const [tab, setTab] = useState<Tab>("kits");
   const lvl = levelForXp(progress.xp);
   const unlockedKits = KIT_VALUES.filter((v) => progress.counters.maxValue >= v).length;
+<<<<<<< HEAD
   const unlockedSkinCount = SKINS.filter((s) => isSkinUnlocked(s, { xp: progress.xp, maxScore: progress.counters.maxScore, level: lvl.level })).length;
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#0B1229]/80 p-3 backdrop-blur-[2px] sm:p-4">
@@ -38,10 +48,17 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
+<<<<<<< HEAD
               <span className="truncate text-[14px] font-extrabold text-white">
                 {progress.xp.toLocaleString()} XP
               </span>
               <span className="shrink-0 text-[12px] font-bold text-[#9FB0E8]">
+=======
+              <span className="truncate text-[13px] font-extrabold text-white">
+                {progress.xp.toLocaleString()} XP
+              </span>
+              <span className="shrink-0 text-[10px] font-bold text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 {lvl.needed > 0 ? `${lvl.needed.toLocaleString()} XP to next level` : "Max level"}
               </span>
             </div>
@@ -56,7 +73,11 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
             type="button"
             onClick={onClose}
             aria-label="Close"
+<<<<<<< HEAD
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20 active:scale-95"
+=======
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20 active:scale-95"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           >
             <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
               <path d="m2 2 10 10M12 2 2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -64,12 +85,17 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
           </button>
         </div>
 
+<<<<<<< HEAD
         <div className="grid grid-cols-3 gap-1 px-4 pt-3" role="tablist" aria-label="Club sections">
+=======
+        <div className="grid grid-cols-2 gap-1 px-4 pt-3" role="tablist" aria-label="Club sections">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           <button
             type="button"
             role="tab"
             aria-selected={tab === "kits"}
             onClick={() => setTab("kits")}
+<<<<<<< HEAD
             className={`min-h-[48px] rounded-xl px-1.5 py-2 text-[11.5px] font-extrabold uppercase tracking-wide transition ${
               tab === "kits" ? "bg-[#FFC93C] text-[#0F1B3D]" : "bg-white/5 text-[#C7CCEA] hover:text-white"
             }`}
@@ -86,13 +112,24 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
             }`}
           >
             Skins {unlockedSkinCount}/{SKINS.length}
+=======
+            className={`min-h-[44px] rounded-xl px-2 py-2 text-[11px] font-extrabold uppercase tracking-wide transition ${
+              tab === "kits" ? "bg-[#FFC93C] text-[#0F1B3D]" : "bg-white/5 text-[#C7CCEA] hover:text-white"
+            }`}
+          >
+            Collection {unlockedKits}/{KIT_VALUES.length}
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           </button>
           <button
             type="button"
             role="tab"
             aria-selected={tab === "trophies"}
             onClick={() => setTab("trophies")}
+<<<<<<< HEAD
             className={`min-h-[48px] rounded-xl px-1.5 py-2 text-[11.5px] font-extrabold uppercase tracking-wide transition ${
+=======
+            className={`min-h-[44px] rounded-xl px-2 py-2 text-[11px] font-extrabold uppercase tracking-wide transition ${
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               tab === "trophies" ? "bg-[#FFC93C] text-[#0F1B3D]" : "bg-white/5 text-[#C7CCEA] hover:text-white"
             }`}
           >
@@ -128,10 +165,17 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
                           </span>
                         )}
                       </div>
+<<<<<<< HEAD
                       <span className={`text-[12.5px] font-extrabold ${unlocked ? "text-white" : "text-[#6B79AD]"}`}>
                         {v}
                       </span>
                       <span className={`text-[10.5px] font-bold leading-none ${unlocked ? "text-[#FFC93C]" : "text-[#4A5680]"}`}>
+=======
+                      <span className={`text-[11px] font-extrabold ${unlocked ? "text-white" : "text-[#6B79AD]"}`}>
+                        {v}
+                      </span>
+                      <span className={`text-[9px] font-bold leading-none ${unlocked ? "text-[#FFC93C]" : "text-[#4A5680]"}`}>
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                         {unlocked ? themeFor(v).name : "Locked"}
                       </span>
                     </div>
@@ -142,6 +186,7 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
                 All kits are original fictional designs — no real clubs, players or brands.
               </p>
             </div>
+<<<<<<< HEAD
           ) : tab === "skins" ? (
             <div className="grid grid-cols-2 gap-2">
               {SKINS.map((skin) => {
@@ -179,6 +224,8 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
                 );
               })}
             </div>
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
           ) : (
             <ul className="m-0 list-none space-y-2">
               {ACHIEVEMENTS.map((a) => {
@@ -213,6 +260,7 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
+<<<<<<< HEAD
                       <p className={`m-0 text-[13px] font-extrabold ${has ? "text-white" : "text-[#8B97C9]"}`}>
                         {a.name}
                       </p>
@@ -220,6 +268,15 @@ export function ProgressOverlay({ progress, onClose }: ProgressOverlayProps) {
                     </div>
                     <span
                       className={`shrink-0 rounded-md px-1.5 py-0.5 text-[12px] font-extrabold tabular-nums ${
+=======
+                      <p className={`m-0 text-[12px] font-extrabold ${has ? "text-white" : "text-[#8B97C9]"}`}>
+                        {a.name}
+                      </p>
+                      <p className="m-0 text-[11px] font-semibold leading-snug text-[#9FB0E8]">{a.description}</p>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold tabular-nums ${
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                         has ? "bg-[#FFC93C]/20 text-[#FFC93C]" : "bg-white/5 text-[#6B79AD]"
                       }`}
                     >

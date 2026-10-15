@@ -54,6 +54,7 @@ export async function GET(req: Request) {
       dailyBest: dayEntry ? dayEntry.score : null,
       dailyRank,
       claimed: claims.map((c) => c.questId),
+<<<<<<< HEAD
       questCounters: {
         merges: 0,
         maxValue: 0,
@@ -64,6 +65,8 @@ export async function GET(req: Request) {
         matches: 0,
         collectionPoints: 0,
       },
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
     };
   }
 

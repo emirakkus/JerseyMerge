@@ -103,25 +103,42 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                 {user.username.charAt(0).toUpperCase()}
               </span>
               <div className="text-left">
+<<<<<<< HEAD
                 <p className="m-0 font-display text-[19px] leading-tight text-white">{user.username}</p>
                 <p className="m-0 text-[12.5px] font-bold text-[#9FB0E8]">
+=======
+                <p className="m-0 font-display text-lg leading-tight text-white">{user.username}</p>
+                <p className="m-0 text-[11px] font-bold text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   Best {user.bestScore.toLocaleString()} pts · streak {user.streak ?? 0} day
                 </p>
               </div>
             </div>
+<<<<<<< HEAD
               <div className="mt-5 flex flex-col gap-2">
+=======
+            <div className="mt-5 flex flex-col gap-2">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               <button
                 type="button"
                 onClick={() => void signOut()}
                 disabled={busy}
+<<<<<<< HEAD
                 className="min-h-[52px] rounded-2xl bg-white/5 px-5 py-3 text-[14px] font-extrabold text-[#FF7A7D] ring-1 ring-[#FF5A5F]/30 transition hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
+=======
+                className="min-h-[48px] rounded-2xl bg-white/5 px-5 py-3 text-sm font-extrabold text-[#FF7A7D] ring-1 ring-[#FF5A5F]/30 transition hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               >
                 Sign out
               </button>
               <button
                 type="button"
                 onClick={onClose}
+<<<<<<< HEAD
                 className="min-h-[52px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display text-[16px] tracking-wide text-[#0F1B3D] transition hover:bg-[#FFD76A] active:scale-[0.98]"
+=======
+                className="min-h-[48px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] transition hover:bg-[#FFD76A] active:scale-[0.98]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               >
                 Close
               </button>
@@ -160,7 +177,11 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                 onClick={() => {
                   window.location.assign("/api/auth/google");
                 }}
+<<<<<<< HEAD
                 className="mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-white/5 px-4 py-3 text-[14px] font-extrabold text-white ring-1 ring-white/15 transition hover:bg-white/10 active:scale-[0.98]"
+=======
+                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-white/5 px-4 py-3 text-sm font-extrabold text-white ring-1 ring-white/15 transition hover:bg-white/10 active:scale-[0.98]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               >
                 <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
                   <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -173,8 +194,13 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
             )}
 
             <form onSubmit={(e) => void submit(e)} className="mt-3 flex flex-col gap-2">
+<<<<<<< HEAD
               <label className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
                 <span className="shrink-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#9FB0E8]">
+=======
+              <label className="flex min-h-[48px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
+                <span className="shrink-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   Name
                 </span>
                 <input
@@ -184,11 +210,19 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                   autoComplete="username"
                   aria-label="Username"
                   placeholder="star_kick"
+<<<<<<< HEAD
                   className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#4A5680]"
                 />
               </label>
               <label className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
                 <span className="shrink-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#9FB0E8]">
+=======
+                  className="m-0 w-full min-w-0 bg-transparent text-right text-sm font-bold text-white outline-none placeholder:text-[#4A5680]"
+                />
+              </label>
+              <label className="flex min-h-[48px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
+                <span className="shrink-0 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                   Password
                 </span>
                 <input
@@ -199,14 +233,22 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                   aria-label="Password"
                   placeholder="min 4 characters"
+<<<<<<< HEAD
                   className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#4A5680]"
+=======
+                  className="m-0 w-full min-w-0 bg-transparent text-right text-sm font-bold text-white outline-none placeholder:text-[#4A5680]"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 />
               </label>
 
               {error && (
                 <p
                   role="alert"
+<<<<<<< HEAD
                   className="m-0 rounded-xl bg-[#FF5A5F]/10 px-3 py-2 text-left text-[13px] font-bold text-[#FF8A8D] ring-1 ring-[#FF5A5F]/30"
+=======
+                  className="m-0 rounded-xl bg-[#FF5A5F]/10 px-3 py-2 text-left text-[12px] font-bold text-[#FF8A8D] ring-1 ring-[#FF5A5F]/30"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
                 >
                   {error}
                 </p>
@@ -215,19 +257,31 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
               <button
                 type="submit"
                 disabled={busy}
+<<<<<<< HEAD
                 className="mt-1 min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406] disabled:opacity-60"
+=======
+                className="mt-1 min-h-[52px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406] disabled:opacity-60"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               >
                 {busy ? "One second…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
               </button>
             </form>
 
+<<<<<<< HEAD
             <p className="m-0 mt-3 text-[12.5px] font-semibold leading-snug text-[#9FB0E8]">
+=======
+            <p className="m-0 mt-3 text-[11px] font-semibold leading-snug text-[#9FB0E8]">
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
               Your scores, streak, collection and trophies sync to your account.
             </p>
             <button
               type="button"
               onClick={onClose}
+<<<<<<< HEAD
               className="mt-1 min-h-[48px] text-[13px] font-extrabold text-[#9FB0E8] transition hover:text-white"
+=======
+              className="mt-2 min-h-[44px] text-xs font-extrabold text-[#9FB0E8] transition hover:text-white"
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
             >
               Play without an account
             </button>

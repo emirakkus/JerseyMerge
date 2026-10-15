@@ -21,6 +21,9 @@ export function mergeProgress(local: ProgressState, remote: ProgressState): Prog
     xp: Math.max(Math.floor(local.xp ?? 0), Math.floor(remote.xp ?? 0)),
     counters: mergeCounters(local.counters, remote.counters),
     achievements: Array.from(new Set([...local.achievements, ...remote.achievements])),
+<<<<<<< HEAD
     skins: Array.from(new Set([...local.skins, ...remote.skins])),
+=======
+>>>>>>> d1b38aefa4f1b225d8dfcb37773cf7db75f17f0c
   };
 }
