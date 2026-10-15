@@ -1,5 +1,5 @@
 /**
- * UI string dictionary. Current UI language is EN; TR translations are
+ * UI string dictionary. Current UI language is TR; EN translations are
  * provided so a language switch is a one-line change (`LANG = "tr"`).
  * Only menu/overlay UI copy lives here — game data (quest titles, kit names)
  * stays in its own modules.
@@ -7,7 +7,61 @@
 
 export type Lang = "en" | "tr";
 
-export const LANG: Lang = "en";
+export const LANG: Lang = "tr";
+
+/** Copy used by the live match HUD, power-ups, pause sheet and canvas effects. */
+export const GAME_UI = {
+  score: "SKOR",
+  best: "REKOR",
+  next: "SIRADAKİ",
+  pause: "Duraklat",
+  resume: "Devam et",
+  restart: "Yeniden başla",
+  mainMenu: "Ana menü",
+  paused: "DURAKLATILDI",
+  playAgain: "YENİDEN OYNA",
+  powerups: "Güçlendirmeler",
+  powerupNames: {
+    joker: "Joker",
+    bomb: "Bomba",
+    scramble: "Karıştır",
+    undo: "Geri Al",
+  },
+  powerupHelp: {
+    joker: "Dokunduğu ilk formayı bir üst seviyeye çıkarır.",
+    bomb: "Yakınındaki formaları temizler.",
+    scramble: "Yığındaki formaları dağıtır.",
+    undo: "Son atışı ve sonrasındaki birleşmeleri geri alır.",
+  },
+  powerupCount: (count: number) => `${count} adet`,
+  levelNames: ["Çaylak", "Okul Yıldızı", "Akademi", "Profesyonel", "Millî Yıldız", "Efsane", "Şampiyon"],
+  levelReached: (name: string) => `${name} seviyesine ulaştın!`,
+  newBest: "YENİ REKOR!",
+  levelUp: "SEVİYE ATLADIN!",
+  combo: (count: number, multiplier: number) => `KOMBO ×${count}  ${multiplier}×`,
+  streak: (bonus: number) => `SERİ +${bonus}`,
+  jokerUpgrade: (from: number, to: number) => `JOKER ${from} → ${to}`,
+  powerupEarned: (name: string) => `${name.toLocaleUpperCase("tr-TR")} +1`,
+  missionComplete: (reward: number) => `GÖREV TAMAMLANDI +${reward}`,
+  levelKit: (value: number) => `${value} FORMASI!`,
+  trophyUnlocked: "KUPA KAZANILDI",
+  gameOver: "MAÇ BİTTİ",
+  wonderfulGame: "HARİKA OYUN!",
+  greatGame: "ÇOK İYİ OYUN!",
+  niceKicks: "GÜZEL BİR MAÇ!",
+  keepPracticing: "ÇALIŞMAYA DEVAM!",
+  newRecord: "YENİ REKOR",
+  duration: "Süre",
+  dailyChallenge: "Günlük mücadele",
+  guestRun: "Misafir oyunu: skorun günlük sıralamaya eklenmedi. Giriş yaparak yarışabilirsin.",
+  submitError: "Skor şu an gönderilemedi. Sonraki oyunun kaydedilir.",
+  dailyRank: "Günlük sıra",
+  newTrophies: "Yeni kupalar",
+  newBadges: "Yeni rozetler",
+  topScores: "En iyi skorlar",
+  top: "En iyi",
+  restartTip: "İpucu: Oyunu hemen yeniden başlatmak için R tuşuna bas.",
+} as const;
 
 export interface HowRule {
   title: string;

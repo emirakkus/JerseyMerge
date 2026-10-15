@@ -531,7 +531,7 @@ function ScoresTab({
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <p className="m-0 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#9FB0E8]">Your best</p>
+        <p className="m-0 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#9FB0E8]">En iyi skorun</p>
         {top.length === 0 ? (
           <p className="m-0 mt-1.5 text-[13px] font-semibold text-[#9FB0E8]">{s("noScores")}</p>
         ) : (
@@ -561,7 +561,7 @@ function ScoresTab({
 
       <div>
         <p className="m-0 text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
-          Leaderboard · all players
+          Sıralama · tüm oyuncular
         </p>
         {globalTop.length === 0 ? (
           <p className="m-0 mt-1.5 text-[13px] font-semibold text-[#9FB0E8]">{s("noBoard")}</p>

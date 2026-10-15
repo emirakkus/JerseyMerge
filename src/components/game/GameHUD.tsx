@@ -1,53 +1,38 @@
 "use client";
 
-import { JerseySprite } from "./JerseySprite";
-import { formatTime } from "@/lib/game/format";
+import { useEffect, useState } from "react";
+import { GAME_UI } from "@/lib/i18n";
 
-interface GameHUDProps {
-  score: number;
-  best: number;
-  next: number;
-  timeMs: number;
-}
+interface GameHUDProps { score: number; best: number }
 
-export function GameHUD({ score, best, next, timeMs }: GameHUDProps) {
+export function GameHUD({ score, best }: GameHUDProps) {
+  const [shownScore, setShownScore] = useState(score);
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { setShownScore(score); return; }
+    const startValue = shownScore;
+    const startAt = performance.now();
+    let frame = 0;
+    const tick = (now: number): void => {
+      const t = Math.min(1, (now - startAt) / 220);
+      setShownScore(Math.round(startValue + (score - startValue) * (1 - (1 - t) ** 3)));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  // shownScore is deliberately sampled only at effect start for each target score.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [score]);
   return (
-    <div className="hud-grid grid grid-cols-4 gap-2 sm:gap-3">
-      <div className="rounded-2xl bg-[#1B2450] px-3 py-2.5 ring-1 ring-white/10 sm:px-4 sm:py-3">
-        <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#FFC93C]">
-          Skor
-        </p>
-        <p
-          key={score}
-          className="score-bump m-0 mt-1 font-display text-[22px] leading-none tabular-nums text-[#FFC93C] sm:text-[26px]"
-        >
-          {score.toLocaleString()}
-        </p>
+    <div className="game-hud" aria-label={`${GAME_UI.score}: ${shownScore.toLocaleString("tr-TR")}`}>
+      <div className="game-score">
+        <span>{GAME_UI.score}</span>
+        <strong key={score} className="score-bump">{shownScore.toLocaleString("tr-TR")}</strong>
       </div>
-      <div className="rounded-2xl bg-[#1B2450] px-3 py-2.5 ring-1 ring-white/10 sm:px-4 sm:py-3">
-        <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-white/70">
-          Süre
-        </p>
-        <p className="m-0 mt-1 font-display text-[22px] leading-none tabular-nums text-white sm:text-[26px]">
-          {formatTime(timeMs)}
-        </p>
-      </div>
-      <div className="flex items-center justify-center gap-1.5 rounded-2xl bg-[#1B2450] px-2 py-2.5 ring-1 ring-white/10 sm:gap-2 sm:px-3 sm:py-3">
-        <JerseySprite value={next} size={42} />
-        <div className="flex flex-col items-start">
-          <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#2EC4B6]">
-            Sıradaki
-          </p>
-          <p className="m-0 mt-1 text-lg font-extrabold tabular-nums text-white">{next}</p>
-        </div>
-      </div>
-      <div className="rounded-2xl bg-[#1B2450] px-3 py-2.5 text-right ring-1 ring-white/10 sm:px-4 sm:py-3">
-        <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#2EC4B6]">
-          Rekor
-        </p>
-        <p className="m-0 mt-1 font-display text-[22px] leading-none tabular-nums text-[#2EC4B6] sm:text-[26px]">
-          {best.toLocaleString()}
-        </p>
+      <div className="game-best" title={GAME_UI.best}>
+        <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h8v2a4 4 0 0 1-8 0V2ZM4 3H1.5v.5A3.5 3.5 0 0 0 5 7m7-4h2.5v.5A3.5 3.5 0 0 1 11 7m-4.5 3.5h3V13h-3m-1 0h5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+        <span>{GAME_UI.best}</span>
+        <strong>{best.toLocaleString("tr-TR")}</strong>
       </div>
     </div>
   );

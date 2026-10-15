@@ -5,7 +5,6 @@ import { GameBoard, type GameHandle } from "@/components/game/GameBoard";
 import { GameHUD } from "@/components/game/GameHUD";
 import { MainMenu } from "@/components/game/MainMenu";
 import { GameOverModal } from "@/components/game/GameOverModal";
-import { Leaderboard } from "@/components/game/Leaderboard";
 import { SplashScreen } from "@/components/game/SplashScreen";
 import { MissionStrip } from "@/components/game/MissionStrip";
 import { LevelStrip } from "@/components/game/LevelStrip";
@@ -64,6 +63,8 @@ import {
   type ScoreEntry,
 } from "@/lib/game/scoring";
 import { sfx } from "@/lib/game/sfx";
+import { GAME_UI } from "@/lib/i18n";
+import { JerseySprite } from "@/components/game/JerseySprite";
 
 interface MeResponse {
   user: ApiUser;
@@ -79,7 +80,6 @@ export default function HomePage() {
   const [best, setBest] = useState(0);
   const [next, setNext] = useState(2);
   const [missions, setMissions] = useState<MissionView[]>(initialMissionViews);
-  const [timerMs, setTimerMs] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
   const [finalTimeMs, setFinalTimeMs] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
@@ -199,15 +199,6 @@ export default function HomePage() {
     refreshGlobal();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshGlobal]);
-
-  // In-game match timer: ticks twice a second, never per-frame.
-  useEffect(() => {
-    if (status !== "playing") return;
-    const tick = (): void => setTimerMs(gameRef.current?.elapsed() ?? 0);
-    tick();
-    const id = window.setInterval(tick, 500);
-    return () => window.clearInterval(id);
-  }, [status]);
 
   const handleScore = useCallback((s: number, b: number) => {
     setScore(s);
@@ -460,7 +451,6 @@ export default function HomePage() {
       }
       modeRef.current = runMode;
       setMode(runMode);
-      setTimerMs(0);
       setBadgesAtRunStart(badges);
       setDanger(false);
       setCheering(false);
@@ -590,8 +580,17 @@ export default function HomePage() {
         </div>
       )}
 
-      <main className="safe-area-main mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-3.5 min-[900px]:max-w-[840px]">
-        <header className="mx-auto flex w-full max-w-[560px] items-center justify-between">
+      <main
+        data-game-status={status}
+        className="game-main safe-area-main mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-3.5 min-[900px]:max-w-[840px]"
+      >
+        {status !== "idle" && <header className="game-topbar">
+          <button className="game-menu-button" type="button" onClick={() => status === "playing" ? togglePause() : goMenu()} aria-label={status === "playing" ? GAME_UI.pause : GAME_UI.mainMenu}>
+            {status === "playing" ? <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4v12M13 4v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg> : <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
+          </button>
+          <GameHUD score={score} best={best} />
+        </header>}
+        <header className="menu-header mx-auto flex w-full max-w-[560px] items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFC93C] shadow-[0_3px_0_#D9A406]">
               <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
@@ -609,7 +608,7 @@ export default function HomePage() {
               <h1 className="m-0 font-display text-[22px] leading-none tracking-tight text-white">
                 JERSEY MERGE
               </h1>
-              <p className="m-0 mt-1 text-[13px] font-semibold text-[#9FB0E8]">Merge the kit up to level 11</p>
+              <p className="m-0 mt-1 text-[13px] font-semibold text-[#9FB0E8]">11. seviyeye kadar formaları birleştir</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -728,11 +727,6 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* HUD spans the full width at the top: skor / süre / sıradaki / rekor */}
-        <div className="mx-auto w-full max-w-[560px] min-[900px]:max-w-none">
-          <GameHUD score={score} best={best} next={next} timeMs={timerMs} />
-        </div>
-
         <div className="game-layout">
           <div className="layout-left">
             <LevelStrip
@@ -741,7 +735,7 @@ export default function HomePage() {
             />
           </div>
 
-          <section className="layout-board rounded-2xl bg-[#1B2450]/50 p-2.5 ring-1 ring-white/10 sm:p-3">
+          <section className="layout-board">
           <GameBoard
             gameRef={gameRef}
             onScore={handleScore}
@@ -754,12 +748,12 @@ export default function HomePage() {
             onCombo={handleCombo}
             onGameEvent={handleGameEvent}
           >
-            <Mascot mood={mood} />
+            {status === "idle" && <Mascot mood={mood} />}
+            {(status === "playing" || status === "paused") && <div className="next-piece-bubble" aria-label={`${GAME_UI.next}: ${next}`}><span>{GAME_UI.next}</span><JerseySprite value={next} size={34} /></div>}
             {combo && combo.count >= 2 && (
               <div className="pointer-events-none absolute left-2 top-2 z-[5] rounded-full bg-[#101d42]/85 px-3 py-1 shadow-lg">
                 <span className="font-display text-sm tracking-wide text-amber-300">
-                  COMBO ×{combo.count}
-                  <span className="ml-1.5 text-xs font-bold text-white">{combo.multiplier}× puan</span>
+                  {GAME_UI.combo(combo.count, combo.multiplier)}
                 </span>
               </div>
             )}
@@ -816,96 +810,9 @@ export default function HomePage() {
               onUse={usePowerup}
             />
 
-            {/* Hamburger menu: pause/resume, restart, leaderboard, how to play */}
-          <details className="group relative">
-            <summary
-              className="flex min-h-[52px] cursor-pointer list-none items-center justify-center gap-1.5 rounded-xl bg-[#1B2450] px-4 py-3 text-[14px] font-extrabold text-white ring-1 ring-white/15 transition hover:bg-[#232E63] active:scale-[0.98]"
-              aria-label="Open menu"
-            >
-              <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              Menu
-            </summary>
-            <div className="absolute right-0 top-[58px] z-20 w-64 rounded-2xl bg-[#16204A] p-2 shadow-2xl ring-1 ring-white/15">
-              <button
-                type="button"
-                onClick={() => {
-                  const d = document.querySelector("details[open]") as HTMLDetailsElement | null;
-                  if (d) d.open = false;
-                  togglePause();
-                }}
-                disabled={status !== "playing" && status !== "paused"}
-                className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-[13px] font-bold text-white transition hover:bg-white/5 disabled:opacity-40"
-              >
-                <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="M6 4v8M10 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                {status === "paused" ? "Resume" : "Pause"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = document.querySelector("details[open]") as HTMLDetailsElement | null;
-                  if (d) d.open = false;
-                  startGame();
-                }}
-                disabled={status === "idle"}
-                className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-[13px] font-bold text-white transition hover:bg-white/5 disabled:opacity-40"
-              >
-                <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="M3 4v8l8-4z" fill="currentColor" />
-                </svg>
-                Restart
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = document.querySelector("details[open]") as HTMLDetailsElement | null;
-                  if (d) d.open = false;
-                  scrollToLeaderboard();
-                }}
-                className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-[13px] font-bold text-white transition hover:bg-white/5"
-              >
-                <svg width="15" height="15" viewBox="0 0 16 16" className="text-[#FFC93C]" aria-hidden="true">
-                  <path
-                    d="M4 2h8v2a4 4 0 0 1-8 0V2ZM4 3H1.5v.5A3.5 3.5 0 0 0 5 7m7-4h2.5v.5A3.5 3.5 0 0 1 11 7m-4.5 3.5h3V13h-3m-1 0h5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Leaderboard
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const d = document.querySelector("details[open]") as HTMLDetailsElement | null;
-                  if (d) d.open = false;
-                  setProgressOpen(true);
-                }}
-                className="flex min-h-[44px] w-full items-center gap-2 rounded-xl px-3 text-left text-[13px] font-bold text-white transition hover:bg-white/5"
-              >
-                <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
-                  <path
-                    d="M4 2h8v2a4 4 0 0 1-8 0V2ZM4 3H1.5v.5A3.5 3.5 0 0 0 5 7m7-4h2.5v.5A3.5 3.5 0 0 1 11 7m-4.5 3.5h3V13h-3m-1 0h5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                How to play
-              </button>
-            </div>
-          </details>
           </div>
         </div>
 
-        <footer className="pb-1 text-center text-[12px] font-medium text-[#8B97C9]">
-          Physics by Matter.js · How to play and the leaderboard live in the main menu
-        </footer>
       </main>
 
       {authOpen && (
@@ -946,7 +853,7 @@ export default function HomePage() {
             </svg>
             <span>
               <span className="block text-[9px] font-extrabold uppercase tracking-[0.18em] text-amber-300">
-                Trophy unlocked
+                {GAME_UI.trophyUnlocked}
               </span>
               <span className="block text-[13px] font-extrabold leading-tight">
                 {toast.name} <span className="text-amber-300">+{toast.xp} XP</span>
@@ -959,24 +866,16 @@ export default function HomePage() {
   );
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
-  return (
-    <kbd className="rounded border border-white/20 bg-white/5 px-1.5 py-0.5 font-sans text-[12px] text-[#C7CCEA]">
-      {children}
-    </kbd>
-  );
-}
-
 function PauseOverlay({ onResume, onRestart, onMenu }: { onResume: () => void; onRestart: () => void; onMenu: () => void }) {
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B1229]/70 backdrop-blur-[2px]">
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Paused"
+        aria-label={GAME_UI.paused}
         className="w-[240px] rounded-2xl bg-[#16204A] p-6 text-center text-white shadow-2xl ring-1 ring-white/10"
       >
-        <h2 className="m-0 font-display text-2xl tracking-tight text-white">PAUSED</h2>
+        <h2 className="m-0 font-display text-2xl tracking-tight text-white">{GAME_UI.paused}</h2>
         <div className="mt-4 flex flex-col gap-2">
           <button
             type="button"
@@ -984,21 +883,21 @@ function PauseOverlay({ onResume, onRestart, onMenu }: { onResume: () => void; o
             autoFocus
             className="min-h-[48px] rounded-xl bg-[#FFC93C] px-5 py-2.5 font-display tracking-wide text-[#0F1B3D] transition hover:bg-[#FFD76A] active:scale-[0.98]"
           >
-            RESUME
+            {GAME_UI.resume}
           </button>
           <button
             type="button"
             onClick={onRestart}
             className="min-h-[44px] rounded-xl px-5 py-2.5 text-sm font-semibold text-[#C7CCEA] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
           >
-            Restart
+            {GAME_UI.restart}
           </button>
           <button
             type="button"
             onClick={onMenu}
             className="min-h-[40px] rounded-xl px-5 py-2 text-sm font-semibold text-[#9FB0E8] transition hover:text-white active:scale-[0.98]"
           >
-            Main menu
+            {GAME_UI.mainMenu}
           </button>
         </div>
       </div>

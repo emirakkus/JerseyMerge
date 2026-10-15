@@ -6,6 +6,7 @@ import { BADGES } from "@/lib/game/badges";
 import { ACHIEVEMENTS } from "@/lib/data/achievements";
 import type { DailyResultInfo } from "@/lib/daily/types";
 import { rankBadgeClass } from "./Leaderboard";
+import { GAME_UI } from "@/lib/i18n";
 
 interface GameOverModalProps {
   score: number;
@@ -21,10 +22,10 @@ interface GameOverModalProps {
 }
 
 function cheerLine(score: number): string {
-  if (score >= 500) return "WONDERFUL GAME!";
-  if (score >= 200) return "GREAT GAME!";
-  if (score >= 50) return "NICE KICKS!";
-  return "KEEP PRACTICING!";
+  if (score >= 500) return GAME_UI.wonderfulGame;
+  if (score >= 200) return GAME_UI.greatGame;
+  if (score >= 50) return GAME_UI.niceKicks;
+  return GAME_UI.keepPracticing;
 }
 
 export function GameOverModal({
@@ -44,17 +45,17 @@ export function GameOverModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Game over"
+        aria-label={GAME_UI.gameOver}
         className="w-full max-w-[330px] overflow-y-auto rounded-3xl bg-[#16204A] p-5 text-center text-white shadow-2xl ring-4 ring-[#FFC93C] max-h-[92%]"
       >
-        <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#FF7A7D]">Full time</p>
+        <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#FF7A7D]">{GAME_UI.gameOver}</p>
         <h2 className="m-0 mt-1 font-display text-[26px] leading-tight tracking-tight text-white">
           {cheerLine(score)}
         </h2>
 
         {isNewBest && (
           <p className="mx-auto mt-3 w-fit rounded-full bg-[#FFC93C]/15 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] text-[#FFC93C] ring-1 ring-[#FFC93C]/40">
-            New record
+            {GAME_UI.newRecord}
           </p>
         )}
 
@@ -66,7 +67,7 @@ export function GameOverModal({
             </p>
           </div>
           <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
-            <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-white/70">Süre</p>
+            <p className="m-0 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-white/70">{GAME_UI.duration}</p>
             <p className="m-0 mt-1 font-display text-[24px] tabular-nums text-white">{formatTime(timeMs)}</p>
           </div>
           <div className="rounded-2xl bg-white/5 px-2 py-3 ring-1 ring-white/10">
@@ -80,19 +81,19 @@ export function GameOverModal({
         {daily && (
           <div className="mt-3 rounded-2xl bg-[#2EC4B6]/10 px-4 py-3 ring-1 ring-[#2EC4B6]/30">
             <p className="m-0 text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#2EC4B6]">
-              Daily challenge · {daily.dayKey}
+              {GAME_UI.dailyChallenge} · {daily.dayKey}
             </p>
             {daily.isGuest ? (
               <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#C7CCEA]">
-                Guest run: not submitted to the daily board. Sign in to compete for the rank.
+                {GAME_UI.guestRun}
               </p>
             ) : daily.error ? (
               <p className="m-0 mt-1 text-[13px] font-semibold leading-snug text-[#C7CCEA]">
-                Could not submit right now (offline or server busy). Your next run will count.
+                {GAME_UI.submitError}
               </p>
             ) : (
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-[13px] font-bold text-[#C7CCEA]">Daily board rank</span>
+                <span className="text-[13px] font-bold text-[#C7CCEA]">{GAME_UI.dailyRank}</span>
                 <span className="font-display text-lg text-white">
                   #{daily.rank} · best {daily.best?.toLocaleString()}
                 </span>
@@ -104,7 +105,7 @@ export function GameOverModal({
         {newTrophies && newTrophies.length > 0 && (
           <div className="mt-3">
             <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
-              New trophies
+              {GAME_UI.newTrophies}
             </p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {newTrophies.map((id) => {
@@ -135,7 +136,7 @@ export function GameOverModal({
         {newBadges.length > 0 && (
           <div className="mt-3">
             <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
-              New badges
+              {GAME_UI.newBadges}
             </p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {newBadges.map((id) => {
@@ -163,7 +164,7 @@ export function GameOverModal({
         {top.length > 0 && (
           <div className="mt-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
             <p className="m-0 text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9FB0E8]">
-              Top scores
+              {GAME_UI.topScores}
             </p>
             <ol className="m-0 mt-1.5 list-none space-y-1.5">
               {top.slice(0, 5).map((entry, i) => (
@@ -197,19 +198,18 @@ export function GameOverModal({
             autoFocus
             className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
           >
-            PLAY AGAIN!
+            {GAME_UI.playAgain}
           </button>
           <button
             type="button"
             onClick={onMenu}
             className="min-h-[48px] rounded-2xl px-5 py-2.5 text-[14px] font-extrabold text-[#C7CCEA] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
           >
-            Main menu
+            {GAME_UI.mainMenu}
           </button>
         </div>
         <p className="m-0 mt-3 text-[12.5px] font-semibold text-[#9FB0E8]">
-          Tip: press <kbd className="rounded-md bg-white/10 px-1.5 py-0.5 font-sans text-[#C7CCEA]">R</kbd> for an
-          instant restart
+          {GAME_UI.restartTip}
         </p>
       </div>
     </div>

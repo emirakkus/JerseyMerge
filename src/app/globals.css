@@ -67,81 +67,79 @@ canvas {
   display: block;
 }
 
-/* ---- Game layout: portrait-first (stacked), landscape/desktop (3 columns) ---- */
+/* ---- Compact, mobile-first game layout ---- */
+.game-layout { display:flex; flex-direction:column; gap:.4rem; flex:1 1 auto; min-height:0; }
+.layout-left,.layout-right,.layout-board { min-width:0; width:100%; }
+.layout-board { position:relative; flex:1 1 0; min-height:0; overflow:hidden; border:1px solid rgba(255,255,255,.12); border-radius:14px; background:rgba(7,12,31,.26); }
+.layout-board > div { width:100%; height:100%; }
+.game-main[data-game-status="idle"] .layout-left,.game-main[data-game-status="idle"] .layout-right { display:none; }
+.game-topbar { height:48px; min-height:48px; display:grid; grid-template-columns:44px minmax(0,1fr); align-items:center; gap:8px; }
+.game-menu-button { width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:14px; color:#fff; background:rgba(255,255,255,.08); touch-action:manipulation; }
+.game-hud { min-width:0; height:48px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; }
+.game-score { min-width:0; display:flex; flex-direction:column; align-items:center; line-height:1; color:var(--jm-yellow); }
+.game-score span,.game-best span { font-size:9px; font-weight:900; letter-spacing:.12em; }
+.game-score strong { font-family:var(--font-display); font-size:clamp(24px,7vw,32px); line-height:.95; font-weight:900; font-variant-numeric:tabular-nums; }
+.game-best { min-width:74px; display:grid; grid-template-columns:18px 1fr; align-items:center; column-gap:4px; color:#b3bddf; }
+.game-best span { letter-spacing:.07em; }
+.game-best strong { grid-column:2; color:#fff; font-size:13px; font-variant-numeric:tabular-nums; }
+.level-strip { position:relative; display:flex; flex-direction:column; justify-content:center; gap:3px; min-height:22px; }
+.level-meta { display:flex; align-items:center; justify-content:space-between; min-height:12px; color:#aeb8d6; font-size:10px; font-weight:800; letter-spacing:.04em; }
+.level-track { height:5px; overflow:hidden; border-radius:9px; background:rgba(255,255,255,.12); }
+.level-fill { height:100%; border-radius:inherit; transition:width .35s ease; }
+.level-toast { color:var(--jm-yellow); animation:toast-in .2s ease both; }
+.powerup-shell { width:100%; }
+.powerup-grid { display:grid; grid-template-columns:repeat(4,minmax(44px,56px)); justify-content:center; gap:clamp(8px,3vw,16px); }
+.powerup-button { position:relative; width:52px; height:52px; min-height:52px; display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.075); color:#fff; touch-action:manipulation; transition:transform .12s ease, opacity .12s ease, background .12s ease; }
+.powerup-button:active { transform:scale(.95); }
+.powerup-button::after { content:attr(data-tooltip); position:absolute; z-index:8; left:50%; bottom:calc(100% + 8px); width:max-content; max-width:220px; padding:6px 8px; border-radius:8px; background:#0c1229; color:#fff; font-size:11px; font-weight:700; line-height:1.25; opacity:0; pointer-events:none; transform:translate(-50%,3px); transition:opacity .12s ease,transform .12s ease; }
+@media (hover:hover) and (pointer:fine) { .powerup-button:hover::after,.powerup-button:focus-visible::after { opacity:1; transform:translate(-50%,0); } }
+.powerup-button.is-available { outline:1px solid currentColor; outline-offset:1px; }
+.powerup-button.is-empty { opacity:.34; filter:saturate(.45); }
+.powerup-count { position:absolute; right:-3px; bottom:-2px; min-width:19px; height:19px; display:grid; place-items:center; padding:0 4px; border:1px solid #101831; border-radius:999px; background:#c4cbe0; color:#101831; font-size:10px; line-height:1; font-weight:900; }
+.powerup-button.is-empty .powerup-count { background:#64708c; color:#d0d5e3; }
+.next-piece-bubble { position:absolute; z-index:4; top:8px; right:8px; width:54px; height:62px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.15); border-radius:18px; background:rgba(10,17,42,.72); backdrop-filter:blur(5px); pointer-events:none; }
+.next-piece-bubble span { font-size:8px; font-weight:900; letter-spacing:.08em; color:#c4cbe0; }
+.next-piece-bubble canvas { max-width:36px; max-height:36px; }
+.game-main { background:linear-gradient(155deg,#111a3b 0%,#191a47 56%,#21184a 100%); }
 
-.game-layout {
-  display: flex;
-  flex-direction: column;
-  gap: var(--jm-space-4);
+@media (max-width:899px) and (orientation:portrait) {
+ .game-main { min-height:100vh; min-height:100dvh; gap:6px; padding: max(4px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); overflow:hidden; }
+ .game-main[data-game-status="playing"],.game-main[data-game-status="paused"],.game-main[data-game-status="over"] { height:100vh; height:100dvh; min-height:0; }
+ .game-main[data-game-status="playing"] .menu-header,.game-main[data-game-status="paused"] .menu-header,.game-main[data-game-status="over"] .menu-header { display:none; }
+ .game-main[data-game-status="playing"] .game-layout,.game-main[data-game-status="paused"] .game-layout,.game-main[data-game-status="over"] .game-layout { display:grid; flex:1 1 0; grid-template-rows:auto minmax(0,1fr) auto; min-height:0; gap:5px; overflow:hidden; }
+ .game-main .layout-left { display:flex; flex-direction:column; justify-content:center; }
+ .game-main .layout-board { width:auto; height:100%; max-width:100%; min-height:0; aspect-ratio:420/720; padding:0; justify-self:center; }
+ .game-main .layout-board > div { width:100%; height:100%; aspect-ratio:auto!important; border-radius:13px; }
+ .game-main .layout-right { display:flex; align-items:center; justify-content:center; padding:2px 0; }
+ .game-main > footer { display:none; }
 }
-.layout-left,
-.layout-right,
-.layout-board {
-  display: flex;
-  flex-direction: column;
-  gap: var(--jm-space-3);
-  width: 100%;
-  min-width: 0;
+@media (max-width:380px) and (orientation:portrait) {
+ .powerup-grid { gap:8px; }
+ .powerup-button { width:48px; height:48px; min-height:48px; }
 }
-
-/*
- * Landscape phones: board in the middle, HUD on the left, power-ups on the
- * right. Grid (not flex) so the middle track can never collapse to 0 — the
- * board keeps a definite width and its aspect-ratio keeps it in view.
- */
-@media (orientation: landscape) and (max-height: 640px) {
-  .game-layout {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr) 150px;
-    align-items: center;
-    gap: var(--jm-space-2);
-  }
-  .layout-left {
-    gap: var(--jm-space-2);
-  }
-  /* Narrow column: stack the HUD tiles instead of squeezing 4 across. */
-  .layout-left .hud-grid {
-    grid-template-columns: 1fr;
-    gap: var(--jm-space-2);
-  }
-  .layout-board {
-    /* leave room for the header + full-width HUD above the board */
-    max-width: calc((100dvh - 158px) * 0.5833);
-    margin-inline: auto;
-  }
-  .layout-right {
-    gap: var(--jm-space-2);
-  }
-  .layout-right .powerup-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .layout-right .controls-row {
-    flex-direction: column;
-  }
-  .layout-right .powerup-info-panel {
-    display: none;
-  }
+@media (orientation:landscape) and (max-height:640px) {
+ .game-main { min-height:100dvh; padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left)); gap:5px; }
+ .game-main[data-game-status="playing"],.game-main[data-game-status="paused"],.game-main[data-game-status="over"] { height:100dvh; min-height:0; }
+ .game-main[data-game-status="playing"] .menu-header,.game-main[data-game-status="paused"] .menu-header,.game-main[data-game-status="over"] .menu-header { display:none; }
+ .game-layout { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; }
+ .layout-board { width:auto; height:100%; aspect-ratio:420/720; justify-self:center; }
+ .layout-right { display:flex; justify-content:center; }
+ .game-main .powerup-grid { grid-template-columns:repeat(4,52px); }
 }
-
-/*
- * Desktop / large screens: wider side panels, board stays the focus.
- * Grid again so the board track is always resolvable.
- */
-@media (min-width: 900px) {
-  .game-layout {
-    display: grid;
-    grid-template-columns: 196px minmax(0, 1fr) 206px;
-    align-items: start;
-    gap: var(--jm-space-4);
-  }
-  .layout-right .powerup-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .layout-right .controls-row {
-    flex-direction: column;
-  }
+@media (min-width:900px) {
+ .game-main[data-game-status="playing"],.game-main[data-game-status="paused"],.game-main[data-game-status="over"] { height:100dvh; min-height:0; max-width:100%; padding:8px 18px; overflow:hidden; }
+ .game-main[data-game-status="playing"] .menu-header,.game-main[data-game-status="paused"] .menu-header,.game-main[data-game-status="over"] .menu-header { display:none; }
+ .game-topbar { flex:0 0 48px; }
+ .game-layout { display:grid; grid-template-columns:110px minmax(0,1fr) 90px; grid-template-rows:auto minmax(0,1fr); gap:8px; }
+ .layout-left { grid-column:1/4; }
+ .layout-board { grid-column:2; grid-row:2; height:100%; width:auto; aspect-ratio:420/720; justify-self:center; }
+ .layout-right { grid-column:3; grid-row:2; align-self:end; }
+ .powerup-grid { grid-template-columns:repeat(2,52px); }
 }
-
+@media (prefers-reduced-motion:reduce) {
+ .level-fill,.powerup-button { transition:none; }
+ .level-toast { animation:none; }
+}
 /* ---- Main menu ---- */
 
 .menu-scroll {

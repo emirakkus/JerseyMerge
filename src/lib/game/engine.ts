@@ -31,6 +31,7 @@ import { refreshJerseySprites } from "./jersey";
 import { loadBest, loadOwnedBadges, saveBest, saveOwnedBadges } from "./scoring";
 import { sfx } from "./sfx";
 import { COMBO_RULES, comboMultiplier, mergeGain, nextCombo, streakBonus } from "./scoreRules";
+import { GAME_UI } from "@/lib/i18n";
 import { vibrate } from "./haptics";
 import { mulberry32, type Rng } from "./prng";
 import type { GameEvent } from "./events";
@@ -643,13 +644,13 @@ export class JerseyEngine {
     this.fx.ring(x, y, theme.secondary, r * 1.6);
     this.fx.floater(x, y - r * 0.35, `+${gain + bonus}`, "#ffffff", Math.min(34, 19 + value / 64));
     if (this.comboCount >= 2) {
-      this.fx.floater(x, y - r - 18, `COMBO x${this.comboCount}  ${mult}×`, "#ffd24a", 19);
+      this.fx.floater(x, y - r - 18, GAME_UI.combo(this.comboCount, mult), "#ffd24a", 19);
       this.burstS(x, y - r, ["#ffd24a", "#ffffff"], 8, 3);
       this.shakeFx(1.5);
       sfx.comboTick(this.comboCount);
     }
     if (bonus > 0) {
-      this.fx.floater(x, y - r - 38, `STREAK +${bonus}`, "#ffd24a", 21);
+      this.fx.floater(x, y - r - 38, GAME_UI.streak(bonus), "#ffd24a", 21);
       this.fx.ring(x, y, "#ffd24a", r * 2.2);
       sfx.streak();
       vibrate([20, 30, 20]);
@@ -694,13 +695,13 @@ export class JerseyEngine {
     }
     if (crossedBest) {
       this.burstS(BOARD_W / 2, 70, ["#ffd24a", "#f2b705", "#ffffff"], 28, 5.5);
-      this.fx.floater(BOARD_W / 2, 130, "NEW BEST!", "#ffd24a", 22);
+      this.fx.floater(BOARD_W / 2, 130, GAME_UI.newBest, "#ffd24a", 22);
       sfx.newBest();
     }
     this.badges.onScore(this.score);
     const levelAfter = levelFor(this.score);
     if (levelAfter.name !== levelBefore.name) {
-      this.fx.floater(BOARD_W / 2, 200, `LEVEL UP! ${levelAfter.name.toUpperCase()}`, "#ffffff", 21);
+      this.fx.floater(BOARD_W / 2, 200, GAME_UI.levelUp, "#ffffff", 21);
       this.fx.ring(BOARD_W / 2, 200, levelAfter.color, 95);
       this.burstS(BOARD_W / 2, 200, [levelAfter.color, "#ffffff"], 18, 5);
       this.shakeFx(3);
@@ -721,7 +722,7 @@ export class JerseyEngine {
     this.missions.completed.length = 0;
     for (const done of finished) {
       this.addScore(done.reward);
-      this.fx.floater(BOARD_W / 2, 175, `MISSION COMPLETE  +${done.reward}`, "#ffd24a", 22);
+      this.fx.floater(BOARD_W / 2, 175, GAME_UI.missionComplete(done.reward), "#ffd24a", 22);
       this.fx.ring(BOARD_W / 2, 175, "#ffd24a", 80);
       this.shakeFx(4);
       sfx.mission();

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { POWERUPS, type PowerupId, type PowerupSnapshot } from "@/lib/game/powerups";
+import { GAME_UI } from "@/lib/i18n";
 
 interface PowerupBarProps {
   snapshot: PowerupSnapshot;
@@ -68,43 +68,28 @@ function PowerupIcon({ id }: { id: string }) {
   }
 }
 
-/** Power-up buttons (52px+ touch targets) with an on-demand info panel. */
+/** Compact icon-only power-up row with touch sized targets. */
 export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
-  // Descriptions live in the button tooltips (title/aria-label) and in the
-  // main menu's "How to play" section — no extra panel on the game screen.
-
   return (
-    <div className="px-0.5">
-      <p className="m-0 px-0.5 pb-1 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[#9FB0E8]">
-        Power-ups
-      </p>
-
-      <div className="powerup-grid grid grid-cols-4 gap-1.5" role="group" aria-label="Power-ups">
+    <div className="powerup-shell">
+      <div className="powerup-grid" role="group" aria-label={GAME_UI.powerups}>
         {POWERUPS.map((p) => {
           const count = snapshot.inventory[p.id];
           const disabled = !canPlay || count <= 0 || (p.id === "undo" && !snapshot.canUndo);
           const active = !disabled;
+          const name = GAME_UI.powerupNames[p.id];
           return (
             <button
               key={p.id}
               type="button"
               onClick={() => onUse(p.id)}
               disabled={disabled}
-              title={`${p.name} (${p.key}) — ${p.description}`}
-              aria-label={`${p.name} power-up, ${count} left. ${p.description}${
-                p.id === "undo" && !snapshot.canUndo ? " Nothing to undo." : ""
-              }`}
-              className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl bg-[#1B2450] px-1 py-2 transition active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
-                active ? `ring-2 ${ACTIVE_RING[p.id]}` : "ring-1 ring-white/10 text-white/40"
-              }`}
+              data-tooltip={`${name} · ${p.key} — ${GAME_UI.powerupHelp[p.id]}`}
+              aria-label={`${name}, ${GAME_UI.powerupCount(count)}. ${GAME_UI.powerupHelp[p.id]}`}
+              className={`powerup-button ${active ? `is-available ${ACTIVE_RING[p.id]}` : "is-empty"}`}
             >
               <PowerupIcon id={p.id} />
-              <span className="text-[12px] font-extrabold leading-none text-white">
-                {p.name} <span className="tabular-nums">×{count}</span>
-              </span>
-              <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-bold text-white/70">
-                {p.key}
-              </kbd>
+              <span className="powerup-count">{count}</span>
             </button>
           );
         })}

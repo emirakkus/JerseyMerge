@@ -56,7 +56,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   ctx.fillRect(-20, -20, BOARD_W + 40, BOARD_H + 40);
 
   // subtle stadium stripes
-  ctx.fillStyle = "rgba(255,255,255,0.035)";
+  ctx.fillStyle = "rgba(255,255,255,0.02)";
   for (let i = 0; i < BOARD_W; i += 70) ctx.fillRect(i, 0, 35, BOARD_H);
 
   // stadium pitch lines
@@ -72,8 +72,9 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   // danger line (coral, pulsing when in breach)
   ctx.save();
   ctx.setLineDash([12, 9]);
-  ctx.strokeStyle = `rgba(255,90,95,${(0.6 + dangerLevel * 0.4).toFixed(3)})`;
-  ctx.lineWidth = dangerLevel > 0.02 ? 4 : 3;
+  const pulse = dangerLevel > 0.02 ? 0.45 + dangerLevel * 0.45 * (0.55 + 0.45 * Math.sin(performance.now() / 130)) : 0.16;
+  ctx.strokeStyle = `rgba(255,90,95,${pulse.toFixed(3)})`;
+  ctx.lineWidth = dangerLevel > 0.02 ? 3 : 1;
   ctx.beginPath();
   ctx.moveTo(0, DANGER_Y);
   ctx.lineTo(BOARD_W, DANGER_Y);
@@ -81,8 +82,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   ctx.restore();
 
   // thick field border
-  ctx.strokeStyle = "rgba(255,255,255,0.5)";
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = "rgba(255,255,255,0.16)";
+  ctx.lineWidth = 1;
   ctx.strokeRect(1.5, 1.5, BOARD_W - 3, BOARD_H - 3);
   void ACCENT_CORAL;
 }
@@ -99,9 +100,6 @@ export function drawAim(ctx: CanvasRenderingContext2D, aimX: number, nextValue: 
   ctx.lineTo(x, BOARD_H - 10);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.globalAlpha = 0.55;
-  const sprite = getJerseySprite(nextValue);
-  ctx.drawImage(sprite, x - r, DROP_Y - r, r * 2, r * 2);
   ctx.restore();
 }
 
