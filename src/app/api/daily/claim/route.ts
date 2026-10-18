@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { dailyQuestClaims } from "@/db/schema";
+import { dailyQuestClaims, users } from "@/db/schema";
 import { clientIp, rateLimit } from "@/lib/server/rateLimit";
 import { requireUser } from "@/lib/server/auth";
 import { isValidQuestForDay } from "@/lib/daily/quests";
@@ -51,6 +51,9 @@ export async function POST(req: Request) {
   }
 
   await db.insert(dailyQuestClaims).values({ userId: user.id, dayKey, questId: quest.id });
+  await db.update(users).set({
+    powerupInventory: sql`jsonb_set(${users.powerupInventory}, ARRAY[${quest.reward}], to_jsonb(LEAST(3, COALESCE((${users.powerupInventory}->>${quest.reward})::integer, 0) + 1)))`,
+  }).where(eq(users.id, user.id));
 
   const all = await db
     .select({ questId: dailyQuestClaims.questId })
@@ -61,5 +64,6 @@ export async function POST(req: Request) {
     reward: { questId: quest.id, powerup: quest.reward },
     claimed: all.map((c) => c.questId),
   };
-  return NextResponse.json(result);
+  const [account] = await db.select({ stock: users.powerupInventory }).from(users).where(eq(users.id, user.id)).limit(1);
+  return NextResponse.json({ ...result, stock: account?.stock });
 }

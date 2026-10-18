@@ -26,6 +26,8 @@ interface GameBoardProps {
   gameRef: { current: GameHandle | null };
   onScore: (score: number, best: number) => void;
   onNext: (value: number) => void;
+  onUpcoming: (value: number) => void;
+  onFollowing: (value: number) => void;
   onGameOver: (score: number) => void;
   onMissions: (missions: MissionView[]) => void;
   onBadges: (owned: string[]) => void;
@@ -37,14 +39,14 @@ interface GameBoardProps {
 }
 
 /** Canvas host: owns the engine instance, pointer + keyboard input and DPR sizing. */
-export function GameBoard({ gameRef, onScore, onNext, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent, children }: GameBoardProps) {
+export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent, children }: GameBoardProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<JerseyEngine | null>(null);
-  const cbRef = useRef({ onScore, onNext, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent });
+  const cbRef = useRef({ onScore, onNext, onUpcoming, onFollowing, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent });
   useEffect(() => {
     // Keep the callback slot current without recreating the engine.
-    cbRef.current = { onScore, onNext, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent };
+    cbRef.current = { onScore, onNext, onUpcoming, onFollowing, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent };
   });
 
   useEffect(() => {
@@ -55,6 +57,8 @@ export function GameBoard({ gameRef, onScore, onNext, onGameOver, onMissions, on
     const engine = new JerseyEngine(canvas, {
       onScore: (s, b) => cbRef.current.onScore(s, b),
       onNext: (v) => cbRef.current.onNext(v),
+      onUpcoming: (v) => cbRef.current.onUpcoming(v),
+      onFollowing: (v) => cbRef.current.onFollowing(v),
       onGameOver: (s) => cbRef.current.onGameOver(s),
       onMissions: (m) => cbRef.current.onMissions(m),
       onBadges: (b) => cbRef.current.onBadges(b),

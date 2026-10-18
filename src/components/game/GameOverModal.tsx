@@ -7,6 +7,7 @@ import { ACHIEVEMENTS } from "@/lib/data/achievements";
 import type { DailyResultInfo } from "@/lib/daily/types";
 import { rankBadgeClass } from "./Leaderboard";
 import { GAME_UI } from "@/lib/i18n";
+import { useState } from "react";
 
 interface GameOverModalProps {
   score: number;
@@ -40,6 +41,23 @@ export function GameOverModal({
   onPlayAgain,
   onMenu,
 }: GameOverModalProps) {
+  const [shareToast, setShareToast] = useState(false);
+  const shareDaily = async () => {
+    if (!daily) return;
+    const dayNo = daily.dayKey.replaceAll("-", "");
+    const highest = daily.maxValue ?? 2;
+    const chainValues = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
+    const chain = chainValues.filter((v) => v <= highest).map(() => "👕").join("");
+    const card = GAME_UI.shareCard(dayNo, score, highest, daily.streak ?? 0, chain, window.location.origin);
+    try {
+      if (navigator.share) await navigator.share({ text: card });
+      else {
+        await navigator.clipboard.writeText(card);
+        setShareToast(true);
+        window.setTimeout(() => setShareToast(false), 2200);
+      }
+    } catch { /* share dialog dismissed or clipboard unavailable */ }
+  };
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B1229]/80 p-4 backdrop-blur-[2px]">
       <div
@@ -99,6 +117,8 @@ export function GameOverModal({
                 </span>
               </div>
             )}
+            <button type="button" onClick={shareDaily} className="mt-3 min-h-11 w-full rounded-xl bg-[#2EC4B6]/20 px-3 py-2 text-sm font-extrabold text-[#2EC4B6] ring-1 ring-[#2EC4B6]/40">{GAME_UI.share}</button>
+            {shareToast && <p role="status" className="m-0 mt-2 text-xs text-white/80">{GAME_UI.copied}</p>}
           </div>
         )}
 

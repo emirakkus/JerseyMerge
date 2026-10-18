@@ -75,20 +75,31 @@ export function saveClaimed(dayKey: string, ids: string[]): void {
 
 export function loadBank(): PowerupBank {
   const b = read<PowerupBank>(BANK_KEY);
-  if (!b) return { joker: 0, bomb: 0, scramble: 0 };
+  if (!b) return { joker: 1, bomb: 1, scramble: 1 };
   return {
-    joker: Math.max(0, Math.floor(Number(b.joker) || 0)),
-    bomb: Math.max(0, Math.floor(Number(b.bomb) || 0)),
-    scramble: Math.max(0, Math.floor(Number(b.scramble) || 0)),
+    joker: Math.min(3, Math.max(0, Math.floor(Number(b.joker) || 0))),
+    bomb: Math.min(3, Math.max(0, Math.floor(Number(b.bomb) || 0))),
+    scramble: Math.min(3, Math.max(0, Math.floor(Number(b.scramble) || 0))),
   };
 }
 
 export function addBank(add: Partial<PowerupBank>): PowerupBank {
   const cur = loadBank();
   const next: PowerupBank = {
-    joker: cur.joker + Math.max(0, Math.floor(Number(add.joker) || 0)),
-    bomb: cur.bomb + Math.max(0, Math.floor(Number(add.bomb) || 0)),
-    scramble: cur.scramble + Math.max(0, Math.floor(Number(add.scramble) || 0)),
+    joker: Math.min(3, cur.joker + Math.max(0, Math.floor(Number(add.joker) || 0))),
+    bomb: Math.min(3, cur.bomb + Math.max(0, Math.floor(Number(add.bomb) || 0))),
+    scramble: Math.min(3, cur.scramble + Math.max(0, Math.floor(Number(add.scramble) || 0))),
+  };
+  write(BANK_KEY, next);
+  return next;
+}
+
+/** Replaces the persisted stock after a match power-up change. */
+export function saveBank(bank: PowerupBank): PowerupBank {
+  const next = {
+    joker: Math.min(3, Math.max(0, Math.floor(bank.joker || 0))),
+    bomb: Math.min(3, Math.max(0, Math.floor(bank.bomb || 0))),
+    scramble: Math.min(3, Math.max(0, Math.floor(bank.scramble || 0))),
   };
   write(BANK_KEY, next);
   return next;

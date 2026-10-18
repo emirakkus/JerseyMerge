@@ -35,14 +35,15 @@ import type { DailyBoardEntry, DailyResultInfo, DailyStateResponse, TouchResult 
 import {
   addBank,
   getTouchDayKey,
+  loadBank,
   loadClaimed,
   loadCounters,
   loadGuestStreak,
   saveClaimed,
+  saveBank,
   saveCounters,
   saveGuestStreak,
   setTouchDayKey,
-  takeBank,
 } from "@/lib/daily/local";
 import type { DailyQuest } from "@/lib/daily/quests";
 import { ProgressTracker } from "@/lib/progress/tracker";
@@ -51,6 +52,7 @@ import { computeMatchXp, levelForXp } from "@/lib/progress/xp";
 import { loadProgress, saveProgress } from "@/lib/progress/local";
 import type { ProgressDto, ProgressSyncResult } from "@/lib/progress/api";
 import type { ProgressState } from "@/lib/progress/types";
+import { emptyProgress } from "@/lib/progress/types";
 import { ProgressOverlay } from "@/components/game/ProgressOverlay";
 import { LeaderboardModal } from "@/components/game/LeaderboardModal";
 import { api, getCachedUser, getToken, setToken, type ApiUser } from "@/lib/api";
@@ -65,6 +67,8 @@ import {
 import { sfx } from "@/lib/game/sfx";
 import { GAME_UI } from "@/lib/i18n";
 import { JerseySprite } from "@/components/game/JerseySprite";
+import { EvolutionStrip } from "@/components/game/EvolutionStrip";
+import { loadHapticsEnabled, setHapticsEnabled } from "@/lib/game/haptics";
 
 interface MeResponse {
   user: ApiUser;
@@ -79,6 +83,9 @@ export default function HomePage() {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [next, setNext] = useState(2);
+  const [upcoming, setUpcoming] = useState(4);
+  const [following, setFollowing] = useState(8);
+  const [highestReached, setHighestReached] = useState(2);
   const [missions, setMissions] = useState<MissionView[]>(initialMissionViews);
   const [finalScore, setFinalScore] = useState(0);
   const [finalTimeMs, setFinalTimeMs] = useState(0);
@@ -100,6 +107,7 @@ export default function HomePage() {
   const [mode, setMode] = useState<"classic" | "daily">("classic");
   const modeRef = useRef<"classic" | "daily">("classic");
   const [dayKey, setDayKey] = useState("");
+  const [dailyPlayedScore, setDailyPlayedScore] = useState<number | null>(null);
   const [questCounters, setQuestCounters] = useState<QuestCounters>(emptyCounters);
   const [dailyMeta, setDailyMeta] = useState<{
     seed: number;
@@ -111,9 +119,11 @@ export default function HomePage() {
     dailyBest: number | null;
   } | null>(null);
   const [dailyResult, setDailyResult] = useState<DailyResultInfo | null>(null);
+  const runMaxValue = useRef(2);
   const [streak, setStreak] = useState(0);
   const trackerRef = useRef<DailyQuestTracker | null>(null);
-  const [progress, setProgress] = useState<ProgressState>(() => loadProgress());
+  // Keep SSR and the first browser render identical; restore local progress after hydration.
+  const [progress, setProgress] = useState<ProgressState>(emptyProgress);
   const [progressOpen, setProgressOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [toast, setToast] = useState<{ key: number; name: string; xp: number } | null>(null);
@@ -124,6 +134,8 @@ export default function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [musicEnabled, setMusicEnabledState] = useState(false);
+  const [hapticsEnabled, setHapticsState] = useState(true);
   const cheerTimer = useRef<number | null>(null);
   const authWasPlaying = useRef(false);
   const gameRef = useRef<GameHandle | null>(null);
@@ -149,15 +161,29 @@ export default function HomePage() {
   useEffect(() => {
     // Hydrate browser-only data (localStorage) once after mount; SSR renders safe defaults.
     setBest(loadBest());
+    setProgress(loadProgress());
     setTop(loadTopScores());
     setBadges(loadOwnedBadges());
     setMuted(sfx.loadMuted());
     sfx.setMuted(sfx.loadMuted());
+    const musicOn = sfx.loadMusicEnabled();
+    setMusicEnabledState(musicOn);
+    sfx.setMusicEnabled(musicOn);
+    const hapticsOn = loadHapticsEnabled();
+    setHapticsState(hapticsOn);
+    setHapticsEnabled(hapticsOn);
 
     // Restore an existing session: localStorage token or httpOnly cookie
     // (the cookie is how the Google OAuth redirect signs the user in).
     const cached = getCachedUser();
     if (cached) setUser(cached);
+    setPowerups((p) => ({ ...p, inventory: { ...p.inventory, ...loadBank() } }));
+    api<{ stock: { joker: number; bomb: number; scramble: number } }>("/api/powerups")
+      .then(({ stock }) => {
+        saveBank(stock);
+        setPowerups((p) => ({ ...p, inventory: { ...p.inventory, ...stock } }));
+      })
+      .catch(() => {});
     api<MeResponse>("/api/auth/me")
       .then((data) => {
         setUser(data.user);
@@ -211,11 +237,19 @@ export default function HomePage() {
   }, []);
 
   const handleNext = useCallback((v: number) => setNext(v), []);
+  const handleUpcoming = useCallback((v: number) => setUpcoming(v), []);
+  const handleFollowing = useCallback((v: number) => setFollowing(v), []);
 
   const handleMissions = useCallback((m: MissionView[]) => setMissions(m), []);
   const handleBadges = useCallback((owned: string[]) => setBadges(owned), []);
   const handleDanger = useCallback((d: boolean) => setDanger(d), []);
-  const handlePowerups = useCallback((p: PowerupSnapshot) => setPowerups(p), []);
+  const handlePowerups = useCallback((p: PowerupSnapshot) => {
+    setPowerups(p);
+    if (status === "playing" || status === "over") {
+      const stock = saveBank({ joker: p.inventory.joker, bomb: p.inventory.bomb, scramble: p.inventory.scramble });
+      if (user) api("/api/powerups", { method: "PUT", body: JSON.stringify({ stock }) }).catch(() => {});
+    }
+  }, [status, user]);
 
   const handleCombo = useCallback((c: ComboEvent) => {
     if (c.count >= 2) {
@@ -239,6 +273,10 @@ export default function HomePage() {
     api<DailyStateResponse>("/api/daily/state")
       .then((data) => {
         setDayKey(data.dayKey);
+        try {
+          const saved = JSON.parse(window.localStorage.getItem("jersey-merge.daily-played") ?? "null") as { dayKey?: string; score?: number } | null;
+          setDailyPlayedScore(saved?.dayKey === data.dayKey && typeof saved.score === "number" ? saved.score : null);
+        } catch { setDailyPlayedScore(null); }
         setDailyMeta({
           seed: data.seed,
           quests: data.quests,
@@ -296,6 +334,10 @@ export default function HomePage() {
 
   const handleGameEvent = useCallback(
     (e: GameEvent) => {
+      if (e.type === "merge") {
+        runMaxValue.current = Math.max(runMaxValue.current, e.value);
+        setHighestReached((current) => Math.max(current, e.value));
+      }
       const t = trackerRef.current;
       if (t) {
         t.handleEvent(e);
@@ -334,16 +376,22 @@ export default function HomePage() {
   const claimQuest = useCallback(
     (questId: string) => {
       if (!dayKey) return;
-      const quest = getDailyQuests(dayKey).find((q) => q.id === questId);
+      // The menu can show the fixed fallback quests before daily metadata loads.
+      // Resolve claims from the same list the menu renders so those rewards work too.
+      const visibleQuests = dailyMeta?.quests ?? getSimpleDailyQuests();
+      const quest = visibleQuests.find((q) => q.id === questId);
       if (!quest) return;
       if (user) {
-        api<{ reward: { questId: string; powerup: string }; claimed: string[] }>(
+        api<{ reward: { questId: string; powerup: string }; claimed: string[]; stock?: { joker: number; bomb: number; scramble: number } }>(
           "/api/daily/claim",
           { method: "POST", body: JSON.stringify({ dayKey, questId }) }
         )
           .then((r) => {
             setDailyMeta((m) => (m ? { ...m, claimed: r.claimed } : m));
-            addBank({ [r.reward.powerup]: 1 } as Record<string, number>);
+            if (r.stock) {
+              saveBank(r.stock);
+              setPowerups((p) => ({ ...p, inventory: { ...p.inventory, ...r.stock } }));
+            } else addBank({ [r.reward.powerup]: 1 } as Record<string, number>);
           })
           .catch(() => {
             /* double-claim or offline — ignore */
@@ -354,9 +402,11 @@ export default function HomePage() {
         saveClaimed(dayKey, [...list, questId]);
         setDailyMeta((m) => (m ? { ...m, claimed: [...list, questId] } : m));
         addBank({ [quest.reward]: 1 } as Record<string, number>);
+        const stock = loadBank();
+        setPowerups((p) => ({ ...p, inventory: { ...p.inventory, ...stock } }));
       }
     },
-    [dayKey, user]
+    [dailyMeta?.quests, dayKey, user]
   );
 
   const handleGameOver = useCallback(
@@ -370,11 +420,15 @@ export default function HomePage() {
       if (isDaily) {
         // Daily challenge: guests play but are not recorded.
         const dk = dayKey || utcDayKey();
+        const savedScore = dailyPlayedScore ?? 0;
+        const recordedScore = Math.max(savedScore, s);
+        setDailyPlayedScore(recordedScore);
+        try { window.localStorage.setItem("jersey-merge.daily-played", JSON.stringify({ dayKey: dk, score: recordedScore })); } catch { /* storage may be unavailable */ }
         if (user) {
-          setDailyResult({ dayKey: dk, isGuest: false });
+          setDailyResult({ dayKey: dk, isGuest: false, maxValue: runMaxValue.current, streak });
           api<{ dayKey: string; best: number; isNewBest: boolean; rank: number }>(
             "/api/daily/challenge",
-            { method: "POST", body: JSON.stringify({ score: s, timeMs }) }
+            { method: "POST", body: JSON.stringify({ score: s, timeMs, dayKey: dk, seed: dailyMeta?.seed }) }
           )
             .then((r) => {
               setDailyResult({
@@ -383,12 +437,14 @@ export default function HomePage() {
                 rank: r.rank,
                 best: r.best,
                 isNewBest: r.isNewBest,
+                maxValue: runMaxValue.current,
+                streak,
               });
               loadDailyState();
             })
-            .catch(() => setDailyResult({ dayKey: dk, isGuest: false, error: true }));
+            .catch(() => setDailyResult({ dayKey: dk, isGuest: false, error: true, maxValue: runMaxValue.current, streak }));
         } else {
-          setDailyResult({ dayKey: dk, isGuest: true });
+          setDailyResult({ dayKey: dk, isGuest: true, maxValue: runMaxValue.current, streak });
         }
       }
       if (!isDaily && user) {
@@ -437,13 +493,15 @@ export default function HomePage() {
       setCombo(null);
       setStatus("over");
     },
-    [user, badges, badgesAtRunStart, powerups, refreshGlobal, dayKey, loadDailyState, persistProgress]
+    [user, badges, badgesAtRunStart, powerups, refreshGlobal, dayKey, loadDailyState, persistProgress, dailyMeta, questCounters, streak, dailyPlayedScore]
   );
 
   const beginRun = useCallback(
     (runMode: "classic" | "daily", seed?: number) => {
       sfx.unlock();
-      const bonus = takeBank(); // quest rewards apply to this match
+      runMaxValue.current = 2;
+      setHighestReached(2);
+      const bonus = loadBank();
       if (runMode === "daily" && seed !== undefined) {
         gameRef.current?.startDaily(seed, bonus);
       } else {
@@ -492,9 +550,20 @@ export default function HomePage() {
     });
   }, []);
 
-  const scrollToLeaderboard = useCallback(() => {
-    document.getElementById("leaderboard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const toggleMusic = useCallback(() => {
+    setMusicEnabledState((enabled) => {
+      sfx.setMusicEnabled(!enabled);
+      return !enabled;
+    });
   }, []);
+
+  const toggleFeedback = useCallback(() => {
+    const enabled = muted && !hapticsEnabled;
+    setMuted(!enabled);
+    sfx.setMuted(!enabled);
+    setHapticsState(enabled);
+    setHapticsEnabled(enabled);
+  }, [hapticsEnabled, muted]);
 
   const usePowerup = useCallback((id: PowerupId) => {
     const g = gameRef.current;
@@ -585,14 +654,20 @@ export default function HomePage() {
         className="game-main safe-area-main mx-auto flex min-h-dvh w-full max-w-[600px] flex-col gap-3.5 min-[900px]:max-w-[840px]"
       >
         {status !== "idle" && <header className="game-topbar">
-          <button className="game-menu-button" type="button" onClick={() => status === "playing" ? togglePause() : goMenu()} aria-label={status === "playing" ? GAME_UI.pause : GAME_UI.mainMenu}>
-            {status === "playing" ? <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4v12M13 4v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg> : <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>}
+          <button className="game-menu-button" type="button" onClick={() => status === "over" ? goMenu() : togglePause()} aria-label={status === "playing" ? GAME_UI.pause : status === "paused" ? GAME_UI.resume : GAME_UI.mainMenu}>
+            {status === "over" ? <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg> : <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4v12M13 4v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>}
           </button>
           <GameHUD score={score} best={best} />
+          <button className="game-feedback-button" type="button" onClick={toggleFeedback}
+            aria-label={muted && !hapticsEnabled ? GAME_UI.feedbackEnabled : GAME_UI.feedbackDisabled}
+            aria-pressed={!muted || hapticsEnabled}
+            title={muted && !hapticsEnabled ? GAME_UI.feedbackEnabled : GAME_UI.feedbackDisabled}>
+            {muted && !hapticsEnabled ? "◌" : "♫"}
+          </button>
         </header>}
         <header className="menu-header mx-auto flex w-full max-w-[560px] items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFC93C] shadow-[0_3px_0_#D9A406]">
+            <div aria-label={GAME_UI.title} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFC93C] shadow-[0_3px_0_#D9A406]">
               <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   d="M8.5 3.5 3 6l1.5 4 2-1v9.5h11V9l2 1L21 6l-5.5-2.5a4.5 4.5 0 0 1-7 0Z"
@@ -604,21 +679,16 @@ export default function HomePage() {
                 <path d="M10 11h4M10 14h4" stroke="#0F1B3D" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </div>
-            <div>
-              <h1 className="m-0 font-display text-[22px] leading-none tracking-tight text-white">
-                JERSEY MERGE
-              </h1>
-              <p className="m-0 mt-1 text-[13px] font-semibold text-[#9FB0E8]">11. seviyeye kadar formaları birleştir</p>
-            </div>
           </div>
           <div className="flex items-center gap-2">
             <span
-              title={`Player level ${lvlInfo.level} · ${progress.xp.toLocaleString()} XP`}
+              title={`${GAME_UI.levelShort} ${lvlInfo.level} · ${progress.xp.toLocaleString()} XP`}
               className="hidden h-12 items-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10 min-[380px]:flex"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" className="text-[#FFC93C]" aria-hidden="true">
                 <path d="M8 1.5 9.9 6l4.6.3-3.5 3 1.1 4.5L8 11.2l-4.1 2.6 1.1-4.5-3.5-3L6.1 6z" fill="currentColor" />
               </svg>
+              <span className="text-[10px] font-extrabold text-[#C7CCEA]">{GAME_UI.levelShort}</span>
               <span className="text-xs font-extrabold tabular-nums text-white">{lvlInfo.level}</span>
               <span className="h-1.5 w-9 overflow-hidden rounded-full bg-white/10">
                 <span
@@ -629,7 +699,7 @@ export default function HomePage() {
             </span>
             {streak > 0 && (
               <span
-                title={`${streak} day login streak (resets if a UTC day is missed)`}
+                title={GAME_UI.streakTooltip(streak)}
                 className="flex h-12 items-center gap-1 rounded-xl bg-[#1B2450] px-2.5 ring-1 ring-white/10"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" className="text-orange-400" aria-hidden="true">
@@ -644,7 +714,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={openAuth}
-              aria-label={user ? `Account: ${user.username}` : "Sign in or create account"}
+              aria-label={user ? `${GAME_UI.profile}: ${user.username}` : GAME_UI.signInOrRegister}
+              title={user ? `${GAME_UI.profile}: ${user.username}` : GAME_UI.signInOrRegister}
               className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-[#1B2450] px-2.5 text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
             >
               {user ? (
@@ -670,23 +741,17 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setProgressOpen(true)}
-              aria-label="Open my club: kit collection and achievements"
+              aria-label={GAME_UI.collectionTooltip}
+              title={GAME_UI.collectionTooltip}
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
             >
-              <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
-                <path
-                  d="M4 2h8v2a4 4 0 0 1-8 0V2ZM4 3H1.5v.5A3.5 3.5 0 0 0 5 7m7-4h2.5v.5A3.5 3.5 0 0 1 11 7m-4.5 3.5h3V13h-3m-1 0h5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="6" r="3" fill="none" stroke="currentColor" strokeWidth="1.7"/><path d="M8 9 6 17l4-2 4 2-2-8M5 3 3 4.5 4 7M15 3l2 1.5L16 7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>
             </button>
             <button
               type="button"
-              onClick={scrollToLeaderboard}
-              aria-label="View leaderboard"
+              onClick={() => setLeaderboardOpen(true)}
+              aria-label={GAME_UI.leaderboard}
+              title={GAME_UI.leaderboard}
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
             >
               <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
@@ -702,7 +767,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={toggleMute}
-              aria-label={muted ? "Unmute sound" : "Mute sound"}
+              aria-label={muted ? GAME_UI.soundOn : GAME_UI.soundOff}
+              title={muted ? GAME_UI.soundOn : GAME_UI.soundOff}
               aria-pressed={muted}
               className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1B2450] text-white ring-1 ring-white/10 transition hover:bg-[#232E63] active:scale-95"
             >
@@ -729,10 +795,20 @@ export default function HomePage() {
 
         <div className="game-layout">
           <div className="layout-left">
-            <LevelStrip
-              score={score}
-              modeLabel={mode === "daily" && dayKey ? `DAILY ${dayKey.slice(5)}` : undefined}
-            />
+            <div className="game-rank-row">
+              <LevelStrip
+                score={score}
+                modeLabel={mode === "daily" && dayKey ? `${GAME_UI.dailyLabel} ${dayKey.slice(5)}` : undefined}
+              />
+              {(status === "playing" || status === "paused") && (
+                <div className="next-pieces-box" aria-label={`${GAME_UI.next}: ${upcoming}; ${GAME_UI.following}: ${following}`}>
+                  <span className="next-pieces-label">{GAME_UI.next}</span>
+                  <JerseySprite value={upcoming} size={28} />
+                  <JerseySprite value={following} size={28} />
+                </div>
+              )}
+            </div>
+            {(status === "playing" || status === "paused") && <EvolutionStrip nextValue={next} highestValue={highestReached} />}
           </div>
 
           <section className="layout-board">
@@ -740,6 +816,8 @@ export default function HomePage() {
             gameRef={gameRef}
             onScore={handleScore}
             onNext={handleNext}
+            onUpcoming={handleUpcoming}
+            onFollowing={handleFollowing}
             onGameOver={handleGameOver}
             onMissions={handleMissions}
             onBadges={handleBadges}
@@ -749,9 +827,8 @@ export default function HomePage() {
             onGameEvent={handleGameEvent}
           >
             {status === "idle" && <Mascot mood={mood} />}
-            {(status === "playing" || status === "paused") && <div className="next-piece-bubble" aria-label={`${GAME_UI.next}: ${next}`}><span>{GAME_UI.next}</span><JerseySprite value={next} size={34} /></div>}
             {combo && combo.count >= 2 && (
-              <div className="pointer-events-none absolute left-2 top-2 z-[5] rounded-full bg-[#101d42]/85 px-3 py-1 shadow-lg">
+              <div className="combo-chip pointer-events-none absolute left-2 top-2 z-[5] rounded-full bg-[#101d42]/85 px-3 py-1 shadow-lg">
                 <span className="font-display text-sm tracking-wide text-amber-300">
                   {GAME_UI.combo(combo.count, combo.multiplier)}
                 </span>
@@ -778,6 +855,7 @@ export default function HomePage() {
                   isGuest: !user,
                   yourRank: dailyMeta?.yourRank ?? null,
                   dailyBest: dailyMeta?.dailyBest ?? null,
+                  dailyPlayedScore,
                 }}
                 onOpenAuth={openAuth}
                 onPlay={startGame}
@@ -785,7 +863,15 @@ export default function HomePage() {
                 onClaimQuest={claimQuest}
               />
             )}
-            {status === "paused" && <PauseOverlay onResume={togglePause} onRestart={startGame} onMenu={goMenu} />}
+            {status === "paused" && <PauseOverlay
+              muted={muted}
+              musicEnabled={musicEnabled}
+              onToggleSound={toggleMute}
+              onToggleMusic={toggleMusic}
+              onResume={togglePause}
+              onRestart={startGame}
+              onMenu={goMenu}
+            />}
             {status === "over" && (
               <GameOverModal
                 score={finalScore}
@@ -866,17 +952,46 @@ export default function HomePage() {
   );
 }
 
-function PauseOverlay({ onResume, onRestart, onMenu }: { onResume: () => void; onRestart: () => void; onMenu: () => void }) {
+function PauseOverlay({
+  muted,
+  musicEnabled,
+  onToggleSound,
+  onToggleMusic,
+  onResume,
+  onRestart,
+  onMenu,
+}: {
+  muted: boolean;
+  musicEnabled: boolean;
+  onToggleSound: () => void;
+  onToggleMusic: () => void;
+  onResume: () => void;
+  onRestart: () => void;
+  onMenu: () => void;
+}) {
+  const [confirmRestart, setConfirmRestart] = useState(false);
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#0B1229]/70 backdrop-blur-[2px]">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={GAME_UI.paused}
-        className="w-[240px] rounded-2xl bg-[#16204A] p-6 text-center text-white shadow-2xl ring-1 ring-white/10"
+        className="w-[280px] max-w-[calc(100vw-32px)] rounded-2xl bg-[#16204A] p-5 text-center text-white shadow-2xl ring-1 ring-white/10"
       >
         <h2 className="m-0 font-display text-2xl tracking-tight text-white">{GAME_UI.paused}</h2>
         <div className="mt-4 flex flex-col gap-2">
+          {confirmRestart ? (
+            <>
+              <p className="m-0 py-1 text-sm font-bold text-[#E3E7F5]">{GAME_UI.restartConfirmTitle} {GAME_UI.restartConfirmBody}</p>
+              <button type="button" onClick={() => { setConfirmRestart(false); onRestart(); }} className="min-h-[44px] rounded-xl bg-[#FF5A5F] px-4 py-2 font-bold text-white hover:bg-[#ff7277]">
+                {GAME_UI.confirmRestart}
+              </button>
+              <button type="button" onClick={() => setConfirmRestart(false)} className="min-h-[44px] rounded-xl px-4 py-2 font-bold text-[#E3E7F5] ring-1 ring-white/20">
+                {GAME_UI.cancel}
+              </button>
+            </>
+          ) : (
+            <>
           <button
             type="button"
             onClick={onResume}
@@ -887,18 +1002,28 @@ function PauseOverlay({ onResume, onRestart, onMenu }: { onResume: () => void; o
           </button>
           <button
             type="button"
-            onClick={onRestart}
-            className="min-h-[44px] rounded-xl px-5 py-2.5 text-sm font-semibold text-[#C7CCEA] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
+            onClick={() => setConfirmRestart(true)}
+            className="min-h-[44px] rounded-xl px-5 py-2.5 text-sm font-semibold text-[#E3E7F5] ring-1 ring-white/15 transition hover:bg-white/5 hover:text-white active:scale-[0.98]"
           >
             {GAME_UI.restart}
           </button>
           <button
             type="button"
             onClick={onMenu}
-            className="min-h-[40px] rounded-xl px-5 py-2 text-sm font-semibold text-[#9FB0E8] transition hover:text-white active:scale-[0.98]"
+            className="min-h-[40px] rounded-xl px-5 py-2 text-sm font-semibold text-[#D6DDF1] transition hover:text-white active:scale-[0.98]"
           >
             {GAME_UI.mainMenu}
           </button>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button type="button" onClick={onToggleSound} aria-pressed={!muted} className="min-h-[44px] rounded-xl bg-white/5 px-2 text-xs font-extrabold text-[#E3E7F5] ring-1 ring-white/10">
+              {GAME_UI.auth.soundLabel}: {muted ? GAME_UI.soundPauseOn : GAME_UI.soundPauseOff}
+            </button>
+            <button type="button" onClick={onToggleMusic} aria-pressed={musicEnabled} className="min-h-[44px] rounded-xl bg-white/5 px-2 text-xs font-extrabold text-[#E3E7F5] ring-1 ring-white/10">
+              {GAME_UI.auth.musicLabel}: {musicEnabled ? GAME_UI.musicOn : GAME_UI.musicOff}
+            </button>
+          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

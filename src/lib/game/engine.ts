@@ -21,7 +21,7 @@ import {
   themeFor,
 } from "./constants";
 import { createJerseyBody, createWorld } from "./physics";
-import { drawFrame } from "./render";
+import { drawFrame, type FrameState, type RenderJersey } from "./render";
 import { MergeQueue, type Mergeable } from "./merge";
 import { FxSystem } from "./fx";
 import { MissionTracker, type MissionSnapshot, type MissionView } from "./missions";
@@ -32,7 +32,7 @@ import { loadBest, loadOwnedBadges, saveBest, saveOwnedBadges } from "./scoring"
 import { sfx } from "./sfx";
 import { COMBO_RULES, comboMultiplier, mergeGain, nextCombo, streakBonus } from "./scoreRules";
 import { GAME_UI } from "@/lib/i18n";
-import { vibrate } from "./haptics";
+import { loadHapticsEnabled, setHapticsEnabled, vibrate } from "./haptics";
 import { mulberry32, type Rng } from "./prng";
 import type { GameEvent } from "./events";
 import {
@@ -58,6 +58,8 @@ export interface ComboEvent {
 export interface EngineCallbacks {
   onScore: (score: number, best: number) => void;
   onNext: (value: number) => void;
+  onUpcoming: (value: number) => void;
+  onFollowing: (value: number) => void;
   onGameOver: (score: number) => void;
   onMissions: (missions: MissionView[]) => void;
   onBadges: (owned: string[]) => void;
@@ -132,10 +134,16 @@ export class JerseyEngine {
   status: GameStatus = "idle";
   mode: GameMode = "classic";
   private rng: Rng = Math.random;
+  private spawnRng: Rng = Math.random;
+  private dailyBag: number[] = [];
+  private dailyBagIndex = 0;
+  private lastDailySpawns: number[] = [];
   private score = 0;
   private best: number;
   private aimX = BOARD_W / 2;
   private nextValue: number;
+  private upcomingValue = 4;
+  private followingValue = 8;
   private lastDropAt = -1e9;
   private breachMs = 0;
   private elapsedMs = 0;
@@ -154,6 +162,16 @@ export class JerseyEngine {
   private missions = new MissionTracker();
   private badges: BadgeTracker;
   private jerseys: Jersey[] = [];
+  private renderJerseys: RenderJersey[] = [];
+  private frameState: FrameState = {
+    jerseys: this.renderJerseys,
+    aimX: 0,
+    nextValue: 2,
+    showAim: false,
+    dangerLevel: 0,
+    ts: 0,
+    reducedMotion: false,
+  };
   private byId = new Map<number, Jersey>();
 
   constructor(canvas: HTMLCanvasElement, callbacks: EngineCallbacks) {
@@ -168,6 +186,7 @@ export class JerseyEngine {
       typeof window !== "undefined" &&
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setHapticsEnabled(loadHapticsEnabled());
     this.fx.setReducedMotion(this.reducedMotion);
     // Re-bake jersey sprites once the rounded webfont is available.
     if (typeof document !== "undefined" && "fonts" in document) {
@@ -219,6 +238,7 @@ export class JerseyEngine {
    * (seed derived from the UTC day), plus any quest-reward bonuses.
    */
   startDaily(seed: number, bonus?: Partial<PowerupInventory>): void {
+    this.spawnRng = mulberry32(seed ^ 0x9e3779b9);
     this.beginRun("daily", mulberry32(seed), bonus);
   }
 
@@ -226,6 +246,9 @@ export class JerseyEngine {
     if (this.destroyed) return;
     this.mode = mode;
     this.rng = rng;
+    this.dailyBag = [];
+    this.dailyBagIndex = 0;
+    this.lastDailySpawns = [];
     Matter.Composite.clear(this.engine.world, false, true);
     Matter.Composite.add(this.engine.world, this.walls);
     this.jerseys = [];
@@ -242,7 +265,9 @@ export class JerseyEngine {
     this.badges = new BadgeTracker(loadOwnedBadges());
     this.badges.push((_earned, all) => this.callbacks.onBadges(all));
     this.breachWarned = false;
-    this.powerups = addBonus(initialInventory(), bonus);
+    this.powerups = bonus
+      ? { joker: Math.min(3, bonus.joker ?? 0), bomb: Math.min(3, bonus.bomb ?? 0), scramble: Math.min(3, bonus.scramble ?? 0), undo: initialInventory().undo }
+      : initialInventory();
     this.used = emptyUsed();
     this.canUndo = false;
     this.snapshot = null;
@@ -251,12 +276,16 @@ export class JerseyEngine {
     this.bestCombo = 0;
     this.pendingJoker = null;
     this.pendingBomb = null;
-    this.nextValue = randomSpawnValue(this.rng);
+    this.nextValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng);
+    this.upcomingValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng);
+    this.followingValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng, this.score);
     this.status = "playing";
     sfx.unlock();
     sfx.ui();
     this.callbacks.onScore(0, this.best);
     this.callbacks.onNext(this.nextValue);
+    this.callbacks.onUpcoming(this.upcomingValue);
+    this.callbacks.onFollowing(this.followingValue);
     this.emitPowerups();
     this.callbacks.onCombo({ count: 0, multiplier: 1 });
   }
@@ -317,7 +346,7 @@ export class JerseyEngine {
     const r = radiusFor(this.nextValue);
     const x = this.clampAim(this.aimX, r);
     const body = createJerseyBody(x, DROP_Y, r);
-    Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.8, y: 2.2 });
+    Matter.Body.setVelocity(body, { x: (this.rng() - 0.5) * 0.8, y: 2.2 });
     Matter.Composite.add(this.engine.world, body);
     const jersey = new Jersey(this.nextValue, body, r, now);
     this.jerseys.push(jersey);
@@ -331,8 +360,12 @@ export class JerseyEngine {
       this.fx.ring(x, DROP_Y, "#ffd24a", r * 1.8);
     }
     this.emitEvent({ type: "drop" });
-    this.nextValue = randomSpawnValue(this.rng);
+    this.nextValue = this.upcomingValue;
+    this.upcomingValue = this.followingValue;
+    this.followingValue = this.mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng, this.score);
     this.callbacks.onNext(this.nextValue);
+    this.callbacks.onUpcoming(this.upcomingValue);
+    this.callbacks.onFollowing(this.followingValue);
   }
 
   /** Drops the joker form: merges with the first jersey it touches. */
@@ -348,15 +381,16 @@ export class JerseyEngine {
   /** Instantly shuffles the pile with a light physics burst. */
   scramblePile(): void {
     if (this.status !== "playing") return;
+    if (this.used.scramble >= 2) return;
     const inv = consumeCharge(this.powerups, "scramble");
     if (!inv) return;
     this.powerups = inv;
     this.used.scramble += 1;
     for (const j of this.jerseys) {
       Matter.Sleeping.set(j.body, false);
-      const drift = (Math.random() - 0.5) * 7;
-      Matter.Body.setVelocity(j.body, { x: drift, y: -(2.5 + Math.random() * 3.5) });
-      Matter.Body.setAngularVelocity(j.body, (Math.random() - 0.5) * 0.35);
+      const drift = (this.rng() - 0.5) * 7;
+      Matter.Body.setVelocity(j.body, { x: drift, y: -(2.5 + this.rng() * 3.5) });
+      Matter.Body.setAngularVelocity(j.body, (this.rng() - 0.5) * 0.35);
     }
     this.fx.floater(BOARD_W / 2, 190, "SHUFFLE!", "#7dd3fc", 24);
     this.fx.ring(BOARD_W / 2, 300, "#7dd3fc", 150);
@@ -369,7 +403,7 @@ export class JerseyEngine {
   /** Restores the world captured before the last jersey drop. */
   undoDrop(): void {
     if (this.status !== "playing") return;
-    if (this.powerups.undo <= 0 || !this.snapshot || !this.canUndo) return;
+    if (this.powerups.undo <= 0 || this.used.undo >= 1 || !this.snapshot || !this.canUndo) return;
     const snap = this.snapshot;
     this.powerups = { ...snap.powerups, undo: snap.powerups.undo - 1 };
     this.used.undo += 1;
@@ -426,13 +460,15 @@ export class JerseyEngine {
     if (this.status !== "playing") return;
     const now = performance.now();
     if (now - this.lastDropAt < DROP_COOLDOWN_MS) return;
+    const cap = POWERUPS.find((p) => p.id === id)?.max ?? 2;
+    if (this.used[id] >= cap) return;
     const inv = consumeCharge(this.powerups, id);
     if (!inv) return;
     this.powerups = inv;
     this.used[id] += 1;
     const x = this.clampAim(this.aimX, radius);
     const body = createJerseyBody(x, DROP_Y, radius);
-    Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 0.8, y: 2.2 });
+    Matter.Body.setVelocity(body, { x: (this.rng() - 0.5) * 0.8, y: 2.2 });
     Matter.Composite.add(this.engine.world, body);
     const jersey = new Jersey(value, body, radius, now);
     this.jerseys.push(jersey);
@@ -467,6 +503,28 @@ export class JerseyEngine {
     const min = r * 0.72 + 8;
     const max = BOARD_W - min;
     return Math.min(max, Math.max(min, x));
+  }
+
+  /** Daily weighted bag prevents long streaks of the same spawn level. */
+  private nextDailySpawn(): number {
+    if (this.dailyBagIndex >= this.dailyBag.length) {
+      this.dailyBag = [2, 2, 2, 2, 4, 4, 8, 16];
+      for (let i = this.dailyBag.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(this.spawnRng() * (i + 1));
+        [this.dailyBag[i], this.dailyBag[j]] = [this.dailyBag[j], this.dailyBag[i]];
+      }
+      this.dailyBagIndex = 0;
+    }
+    let idx = this.dailyBagIndex;
+    const repeats = (v: number) => this.lastDailySpawns.length >= 2 && this.lastDailySpawns[this.lastDailySpawns.length - 1] === v && this.lastDailySpawns[this.lastDailySpawns.length - 2] === v;
+    if (repeats(this.dailyBag[idx])) {
+      const swap = this.dailyBag.findIndex((v, i) => i > idx && !repeats(v));
+      if (swap >= 0) [this.dailyBag[idx], this.dailyBag[swap]] = [this.dailyBag[swap], this.dailyBag[idx]];
+    }
+    const value = this.dailyBag[this.dailyBagIndex++];
+    this.lastDailySpawns.push(value);
+    if (this.lastDailySpawns.length > 2) this.lastDailySpawns.shift();
+    return value;
   }
 
   powerupView(): PowerupSnapshot {
@@ -595,7 +653,7 @@ export class JerseyEngine {
     this.burstS(bomb.x, bomb.y, ["#ffd24a", "#ffffff", "#94a3b8"], 30, 6);
     this.fx.ring(bomb.x, bomb.y, "#e2e8f0", R + 12);
     // Make the effect visible: show exactly how much space was opened.
-    this.fx.floater(bomb.x, bomb.y - 40, cleared > 0 ? `BOOM! ${cleared} cleared` : "BOOM!", "#fca5a5", 22);
+    this.fx.floater(bomb.x, bomb.y - 40, GAME_UI.boom(cleared), "#fca5a5", 22);
     this.shakeFx(9);
     sfx.bomb();
   }
@@ -656,7 +714,7 @@ export class JerseyEngine {
       vibrate([20, 30, 20]);
     }
     if (value >= 64 && (value & (value - 1)) === 0) {
-      this.fx.floater(x, y - r - 58, `${theme.name.toUpperCase()} KIT!`, theme.secondary, 15);
+      this.fx.floater(x, y - r - 58, GAME_UI.levelKit(value), theme.secondary, 15);
     }
     const jokerUsed = a.value === JOKER_VALUE || b.value === JOKER_VALUE;
     if (jokerUsed) {
@@ -673,11 +731,11 @@ export class JerseyEngine {
       if (cfg.earnAt && value >= cfg.earnAt && this.powerups[cfg.id] < cfg.max) {
         this.powerups = applyEarn(this.powerups, cfg.id);
         const slot = jokerUsed ? 98 : this.comboCount >= 2 ? 78 : 58;
-        this.fx.floater(x, y - r - slot, `${cfg.name.toUpperCase()} +1`, "#fff3b0", 14);
+        this.fx.floater(x, y - r - slot, GAME_UI.powerupEarned(GAME_UI.powerupNames[cfg.id]), "#fff3b0", 14);
       }
     }
     this.shakeFx(1.5 + Math.min(8, value / 48));
-    sfx.merge(value);
+    sfx.merge(value, this.comboCount);
     // Light haptic: bigger kits buzz a bit longer.
     vibrate(value >= 64 ? 35 : 20);
     this.emitPowerups();
@@ -735,7 +793,7 @@ export class JerseyEngine {
     const newly = this.badges.earned;
     this.badges.earned.length = 0;
     for (const badge of newly) {
-      this.fx.floater(BOARD_W / 2, 235, `BADGE! ${badge.name.toUpperCase()}`, "#ffd24a", 20);
+      this.fx.floater(BOARD_W / 2, 235, GAME_UI.badgeUnlocked(badge.name), "#ffd24a", 20);
       this.fx.ring(BOARD_W / 2, 235, "#ffd24a", 70);
       this.shakeFx(3);
       sfx.badge();
@@ -797,7 +855,14 @@ export class JerseyEngine {
   }
 
   private get dangerLevel(): number {
-    return Math.min(1, this.breachMs / BREACH_GRACE_MS);
+    let danger = Math.min(1, this.breachMs / BREACH_GRACE_MS);
+    for (const jersey of this.jerseys) {
+      const top = jersey.y - jersey.radius;
+      if (top < DANGER_Y + 30 && jersey.y > DANGER_Y - 20) {
+        danger = Math.max(danger, Math.min(0.42, 0.12 + (DANGER_Y + 30 - top) / 100));
+      }
+    }
+    return danger;
   }
 
   /** Elapsed play time of the current match (ms), frozen once the match ends. */
@@ -809,22 +874,27 @@ export class JerseyEngine {
 
   private render(ts: number): void {
     const off = this.fx.offset();
-    drawFrame(this.ctx, this.viewScale, off, this.fx, {
-      jerseys: this.jerseys.map((j) => ({
-        x: j.x,
-        y: j.y,
-        angle: j.body.angle,
-        radius: j.radius,
-        value: j.value,
-        spawnAt: j.spawnAt,
-      })),
-      aimX: this.aimX,
-      nextValue: this.nextValue,
-      showAim: this.status === "playing",
-      dangerLevel: this.dangerLevel,
-      ts,
-      reducedMotion: this.reducedMotion,
-    });
+    const count = this.jerseys.length;
+    for (let i = 0; i < count; i++) {
+      const jersey = this.jerseys[i];
+      const frameJersey = this.renderJerseys[i] ?? (this.renderJerseys[i] = {
+        x: 0, y: 0, angle: 0, radius: 0, value: 0, spawnAt: 0,
+      });
+      frameJersey.x = jersey.x;
+      frameJersey.y = jersey.y;
+      frameJersey.angle = jersey.body.angle;
+      frameJersey.radius = jersey.radius;
+      frameJersey.value = jersey.value;
+      frameJersey.spawnAt = jersey.spawnAt;
+    }
+    this.renderJerseys.length = count;
+    this.frameState.aimX = this.aimX;
+    this.frameState.nextValue = this.nextValue;
+    this.frameState.showAim = this.status === "playing";
+    this.frameState.dangerLevel = this.dangerLevel;
+    this.frameState.ts = ts;
+    this.frameState.reducedMotion = this.reducedMotion;
+    drawFrame(this.ctx, this.viewScale, off, this.fx, this.frameState);
   }
 
 }

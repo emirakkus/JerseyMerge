@@ -1,24 +1,69 @@
 /**
- * UI string dictionary. Current UI language is TR; EN translations are
- * provided so a language switch is a one-line change (`LANG = "tr"`).
- * Only menu/overlay UI copy lives here — game data (quest titles, kit names)
- * stays in its own modules.
+ * Single Turkish dictionary for visible game, menu, quest, tooltip and metadata copy.
  */
 
-export type Lang = "en" | "tr";
+export type Lang = "tr";
 
 export const LANG: Lang = "tr";
 
 /** Copy used by the live match HUD, power-ups, pause sheet and canvas effects. */
 export const GAME_UI = {
+  title: "JERSEY MERGE",
+  chainPreview: "2'den 2048'e forma zinciri",
   score: "SKOR",
   best: "REKOR",
   next: "SIRADAKİ",
+  following: "ARDINDAN",
+  nextRankGoal: (name: string, score: number) => `Sıradaki: ${name} · ${score.toLocaleString("tr-TR")} puan`,
+  maxRank: "Maksimum rütbe",
   pause: "Duraklat",
   resume: "Devam et",
   restart: "Yeniden başla",
   mainMenu: "Ana menü",
   paused: "DURAKLATILDI",
+  restartConfirmTitle: "Emin misin?",
+  restartConfirmBody: "Mevcut maç kaybolacak.",
+  confirmRestart: "Evet, yeniden başla",
+  cancel: "Vazgeç",
+  musicOn: "Müziği kapat",
+  musicOff: "Müziği aç",
+  soundPauseOn: "Ses efektlerini aç",
+  soundPauseOff: "Ses efektlerini kapat",
+  highestReached: "EN YÜKSEK",
+  auth: {
+    welcome: "Tekrar hoş geldin!",
+    join: "Takıma katıl!",
+    createAccount: "HESAP OLUŞTUR",
+    signIn: "GİRİŞ YAP",
+    username: "KULLANICI ADI",
+    password: "ŞİFRE",
+    passwordPlaceholder: "en az 8 karakter",
+    showPassword: "Göster",
+    hidePassword: "Gizle",
+    working: "Bir saniye…",
+    soundLabel: "Ses efektleri",
+    musicLabel: "Müzik",
+    guestContinue: "Hesapsız devam et",
+    description: "Skorların, serin, forma koleksiyonun ve kupaların hesabınla eşitlenir.",
+    signedIn: "GİRİŞ YAPILDI",
+    signOut: "Çıkış yap",
+    close: "Kapat",
+    google: "Google ile devam et",
+    dialog: "Giriş yap veya hesap oluştur",
+    account: "Hesap",
+    bestAndStreak: (best: number, streak: number) => `Rekor ${best.toLocaleString("tr-TR")} puan · Seri ${streak} gün`,
+    errors: {
+      required: "Kullanıcı adı ve şifre gerekli.",
+      passwordLength: "Şifre en az 8, en fazla 64 karakter olmalı.",
+      username: "Kullanıcı adı 3–14 karakter olmalı; harf, sayı ve alt çizgi kullanabilirsin.",
+      credentials: "Kullanıcı adı veya şifre yanlış.",
+      taken: "Bu kullanıcı adı zaten kullanılıyor.",
+      account: "Hesap oluşturulamadı. Tekrar dene.",
+      connection: "Sunucuya ulaşılamadı. Tekrar dene.",
+      rateLimit: "Çok fazla deneme yaptın. Biraz bekleyip tekrar dene.",
+      generic: "Bir hata oluştu. Tekrar dene.",
+    },
+  },
   playAgain: "YENİDEN OYNA",
   powerups: "Güçlendirmeler",
   powerupNames: {
@@ -53,6 +98,21 @@ export const GAME_UI = {
   newRecord: "YENİ REKOR",
   duration: "Süre",
   dailyChallenge: "Günlük mücadele",
+  dailyNotPlayed: "Bugün oynanmadı",
+  dailyCompleted: "Tamamlandı",
+  menuSections: "Menü bölümleri",
+  levelShort: "Sv.",
+  profile: "Hesap",
+  signInOrRegister: "Giriş yap veya hesap oluştur",
+  collectionTooltip: "Forma koleksiyonu ve rozetler",
+  leaderboard: "Sıralama",
+  soundOn: "Sesi aç",
+  soundOff: "Sesi kapat",
+  streakTooltip: (count: number) => `${count} günlük giriş serisi; UTC gününü kaçırırsan sıfırlanır`,
+  share: "Paylaş",
+  confirmBomb: "Onaylamak için Bomba'ya tekrar dokun",
+  copied: "Günlük skor kartı kopyalandı.",
+  shareCard: (day: string, score: number, level: number, streak: number, chain: string, url: string) => `Jersey Merge Günlük #${day} | Skor ${score} | En yüksek forma: ${level} | Seri: ${streak} gün\n${chain}\n${url}`,
   guestRun: "Misafir oyunu: skorun günlük sıralamaya eklenmedi. Giriş yaparak yarışabilirsin.",
   submitError: "Skor şu an gönderilemedi. Sonraki oyunun kaydedilir.",
   dailyRank: "Günlük sıra",
@@ -61,7 +121,62 @@ export const GAME_UI = {
   topScores: "En iyi skorlar",
   top: "En iyi",
   restartTip: "İpucu: Oyunu hemen yeniden başlatmak için R tuşuna bas.",
+  feedbackEnabled: "Ses ve titreşimi aç",
+  feedbackDisabled: "Ses ve titreşimi kapat",
+  evolution: "Forma zinciri",
+  missionsLabel: "Maç görevleri",
+  badgeUnlocked: (name: string) => `ROZET KAZANILDI: ${name.toLocaleUpperCase("tr-TR")}`,
+  boom: (cleared: number) => cleared > 0 ? `PAT! ${cleared} forma temizlendi` : "PAT!",
+  questTitles: {
+    merges: (count: number) => `${count} kez forma birleştir`,
+    reachValue: (value: number) => `${value} değerinde formaya ulaş`,
+    combo: (count: number) => `x${count} kombo yap`,
+    score: (score: number) => `Tek maçta ${score} puan kazan`,
+    drops: (count: number) => `${count} forma bırak`,
+    powerups: (count: number) => `${count} güçlendirici kullan`,
+    matches: (count: number) => `${count} maçı tamamla`,
+    collection: (count: number) => `${count} koleksiyon puanı kazan`,
+  },
+  simpleQuests: {
+    matches: "3 maç oyna",
+    score: "Tek maçta 1000 puana ulaş",
+    merges: "5 forma birleştir",
+  },
+  dailyLabel: "GÜNLÜK",
+  missions: {
+    warmup: { title: "Isınma", description: "5 forma birleştir." },
+    bigkit: { title: "Büyük forma", description: "32 değerinde formaya ulaş." },
+    showtime: { title: "Gösteri zamanı", description: "Tek atışta 3 zincir kombo yap." },
+  },
+  badges: {
+    first_touch: { name: "İlk Birleşme", description: "İlk formalarını birleştir." },
+    kit_32: { name: "Forma Koleksiyoncusu", description: "32 değerinde formaya ulaş." },
+    chain_3: { name: "Zincir Yıldızı", description: "Tek atışta 3 zincir kombo yap." },
+    merges_10: { name: "Seri Birleşme", description: "Tek maçta 10 forma birleştir." },
+    score_300: { name: "Golcü", description: "Tek maçta 300 puana ulaş." },
+    kit_128: { name: "Büyük Final", description: "128 değerinde formaya ulaş." },
+  },
+  achievements: {
+    first_merge: { name: "İlk Birleşme", description: "İlk formalarını birleştir." },
+    merge_50: { name: "Pas Makinesi", description: "50 forma birleştir." },
+    merge_200: { name: "Oyun Kurucu", description: "200 forma birleştir." },
+    kit_16: { name: "Forma Koleksiyoncusu", description: "16 değerinde formaya ulaş." },
+    kit_64: { name: "Altın Krampon", description: "64 değerinde formaya ulaş." },
+    kit_256: { name: "Stadyum Efsanesi", description: "256 değerinde formaya ulaş." },
+    combo_3: { name: "Çabuk Ayaklar", description: "x3 kombo yap." },
+    combo_6: { name: "Tiki Taka", description: "x6 kombo yap." },
+    score_500: { name: "Gol Makinesi", description: "Tek maçta 500 puan kazan." },
+    score_2000: { name: "Maçın Galibi", description: "Tek maçta 2000 puan kazan." },
+    powerup_10: { name: "Oyun Kurucu", description: "10 güçlendirici kullan." },
+    joker_5: { name: "Joker", description: "5 joker forması bırak." },
+    bomb_3: { name: "Havai Fişek", description: "3 bomba bırak." },
+    undo_1: { name: "Mola", description: "Bir atışı geri al." },
+    matches_5: { name: "Normal Sezon", description: "5 maçı tamamla." },
+    matches_25: { name: "Veteran", description: "25 maçı tamamla." },
+  },
 } as const;
+
+export const META_DESCRIPTION = "2'den 2048'e kadar 11 forma seviyesini birleştir; görevleri tamamla, kombo yap ve Jersey Merge'de rekorunu kır.";
 
 export interface HowRule {
   title: string;
@@ -95,55 +210,6 @@ export interface Strings {
   noScores: string;
 }
 
-const en: Strings = {
-  title: "JERSEY MERGE",
-  tagline: "Merge your kits all the way to the big league!",
-  signIn: "Sign in to save your progress",
-  signedIn: "Progress is saved",
-  best: "Best",
-  tabQuests: "Quests",
-  tabHow: "How",
-  tabScores: "Scores",
-  tabBadges: "Badges",
-  today: "Today",
-  streak: "day streak",
-  claim: "Claim",
-  claimed: "Claimed",
-  perMatchNote: "Per-match missions. Rewards are added straight into your match score.",
-  dailyBoard: "Daily board",
-  noBoard: "No scores yet today — be the first!",
-  guestDaily:
-    "Guest run: you can play the daily, but scores are not submitted to the board. Sign in to compete.",
-  seedNote: "Same jersey sequence for everyone today. Resets at 00:00 UTC.",
-  yourRank: "You",
-  play: "PLAY!",
-  daily: "DAILY",
-  dailyAria: "Daily challenge: same jerseys for everyone today",
-  howRules: [
-    {
-      title: "Drop",
-      text: "Drag, tap or use the arrow keys to aim, then tap or press Space to drop a jersey.",
-    },
-    {
-      title: "Merge",
-      text: "Two identical jerseys merge into the next value: 2 + 2 = 4, 4 + 4 = 8, up to the golden 2048 kit.",
-    },
-    {
-      title: "Danger line",
-      text: "If a resting jersey stays above the red line, the match is over.",
-    },
-    {
-      title: "Power-ups",
-      text: "Joker merges with any jersey it touches, Bomb clears an area, Scramble shuffles the pile, Undo takes back your last drop. Keys J, B, K, Z.",
-    },
-    {
-      title: "Combo & daily",
-      text: "Chain merges within 1.5s for up to 2x score. Daily quests give power-up bonuses and keep your streak alive.",
-    },
-  ],
-  noScores: "No scores yet. Play a match to claim the top spot!",
-};
-
 const tr: Strings = {
   title: "JERSEY MERGE",
   tagline: "Formalarını birleştir, ligin zirvesine yüksel!",
@@ -158,11 +224,11 @@ const tr: Strings = {
   streak: "gün seri",
   claim: "Al",
   claimed: "Alındı",
-  perMatchNote: "Maç içi görevler. Ödüller doğrudan maç puanına eklenir.",
+  perMatchNote: "Görev ödülleri güçlendirici envanterine eklenir.",
   dailyBoard: "Günlük sıralama",
   noBoard: "Bugün henüz skor yok — ilk sen ol!",
   guestDaily:
-    "Misafir koşusu: daily oynayabilirsin ama skorlar sıralamaya yazılmaz. Rekabete katılmak için giriş yap.",
+    "Misafir olarak günlük modda oynayabilirsin ama skorun sıralamaya yazılmaz. Yarışmaya katılmak için giriş yap.",
   seedNote: "Bugün herkes için aynı forma sırası. 00:00 UTC'de yenilenir.",
   yourRank: "Sen",
   play: "OYNA!",
@@ -175,7 +241,7 @@ const tr: Strings = {
     },
     {
       title: "Birleştir",
-      text: "İki aynı forma bir üst değere geçer: 2 + 2 = 4, 4 + 4 = 8, altın 2048 formasına kadar.",
+      text: "İki aynı forma birleşerek bir üst seviyeye çıkar. Zincir 2 değerinden altın 2048 formasına kadar 11 seviyeden oluşur.",
     },
     {
       title: "Tehlike çizgisi",
@@ -193,7 +259,7 @@ const tr: Strings = {
   noScores: "Henüz skor yok. Bir maç oynayıp zirveyi kap!",
 };
 
-export const STRINGS: Record<Lang, Strings> = { en, tr };
+export const STRINGS: Record<Lang, Strings> = { tr };
 
 export type StringKey = keyof Strings;
 

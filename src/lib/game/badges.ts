@@ -1,3 +1,6 @@
+import { GAME_UI } from "@/lib/i18n";
+
+
 /**
  * Permanent badges earned across matches. The tracker is per-run (reset in
  * start()) but seeded with already-owned ids so each badge fires only once
@@ -11,12 +14,12 @@ export interface BadgeDefinition {
 }
 
 export const BADGES: readonly BadgeDefinition[] = [
-  { id: "first_touch", name: "First Touch", description: "Complete your first merge." },
-  { id: "kit_32", name: "Kit Collector", description: "Merge up to a 32 jersey." },
-  { id: "chain_3", name: "Chain Star", description: "Land a 3-chain from one drop." },
-  { id: "merges_10", name: "Hot Streak", description: "Complete 10 merges in one match." },
-  { id: "score_300", name: "Big Scorer", description: "Reach 300 points in one match." },
-  { id: "kit_128", name: "Grand Final", description: "Merge up to a 128 jersey." },
+  { id: "first_touch", ...GAME_UI.badges.first_touch },
+  { id: "kit_32", ...GAME_UI.badges.kit_32 },
+  { id: "chain_3", ...GAME_UI.badges.chain_3 },
+  { id: "merges_10", ...GAME_UI.badges.merges_10 },
+  { id: "score_300", ...GAME_UI.badges.score_300 },
+  { id: "kit_128", ...GAME_UI.badges.kit_128 },
 ];
 
 type BadgeListener = (earned: BadgeDefinition[], all: string[]) => void;

@@ -1,10 +1,16 @@
 /** Tiny WebAudio synth for game feedback. No assets, lazily created, mute-persisted. */
 
 const MUTE_KEY = "jersey-merge.muted";
+const MUSIC_KEY = "jersey-merge.music-enabled";
 
 class Sfx {
   private ctx: AudioContext | null = null;
   private muted = false;
+  private musicEnabled = false;
+  private musicOscillator: OscillatorNode | null = null;
+  private musicGain: GainNode | null = null;
+  private musicTimer: number | null = null;
+  private musicStep = 0;
 
   private ensure(): AudioContext | null {
     if (typeof window === "undefined") return null;
@@ -46,6 +52,65 @@ class Sfx {
     return this.muted;
   }
 
+  loadMusicEnabled(): boolean {
+    try {
+      return typeof window !== "undefined" && window.localStorage.getItem(MUSIC_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  isMusicEnabled(): boolean {
+    return this.musicEnabled;
+  }
+
+  setMusicEnabled(enabled: boolean): void {
+    this.musicEnabled = enabled;
+    try {
+      if (typeof window !== "undefined") window.localStorage.setItem(MUSIC_KEY, enabled ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+    if (enabled) this.startMusic();
+    else this.stopMusic();
+  }
+
+  private startMusic(): void {
+    if (this.musicOscillator || typeof window === "undefined") return;
+    const ctx = this.ensure();
+    if (!ctx) return;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 196;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.008, ctx.currentTime + 0.6);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.start();
+    this.musicOscillator = oscillator;
+    this.musicGain = gain;
+    const notes = [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63];
+    this.musicStep = 0;
+    this.musicTimer = window.setInterval(() => {
+      if (!this.musicEnabled || !this.musicOscillator || !this.ctx) return;
+      const note = notes[this.musicStep++ % notes.length];
+      this.musicOscillator.frequency.setTargetAtTime(note, this.ctx.currentTime, 0.16);
+    }, 850);
+  }
+
+  private stopMusic(): void {
+    if (this.musicTimer !== null && typeof window !== "undefined") window.clearInterval(this.musicTimer);
+    this.musicTimer = null;
+    if (this.musicOscillator && this.ctx) {
+      const oscillator = this.musicOscillator;
+      this.musicGain?.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.04);
+      window.setTimeout(() => { try { oscillator.stop(); } catch { /* already stopped */ } }, 180);
+    }
+    this.musicOscillator = null;
+    this.musicGain = null;
+  }
+
   private tone(freq: number, dur: number, type: OscillatorType, gain: number, delay = 0, slideTo?: number): void {
     if (this.muted) return;
     const ctx = this.ensure();
@@ -71,11 +136,11 @@ class Sfx {
     this.tone(175, 0.07, "triangle", 0.1, 0, 95);
   }
 
-  merge(value: number): void {
-    const base = 240 + Math.log2(Math.max(2, value)) * 46;
+  merge(value: number, combo = 1): void {
+    const base = Math.min(1200, (240 + Math.log2(Math.max(2, value)) * 46) * Math.min(1.45, 1 + Math.max(0, combo - 1) * 0.055));
     this.tone(base, 0.1, "sine", 0.16);
-    this.tone(base * 1.5, 0.14, "sine", 0.12, 0.055);
-    if (value >= 64) this.tone(base * 2, 0.16, "triangle", 0.07, 0.11);
+    this.tone(Math.min(1800, base * 1.5), 0.14, "sine", 0.12, 0.055);
+    if (value >= 64) this.tone(Math.min(2200, base * 2), 0.16, "triangle", 0.07, 0.11);
   }
 
   /** Rising tick per chain link — the longer the chain, the higher it climbs. */

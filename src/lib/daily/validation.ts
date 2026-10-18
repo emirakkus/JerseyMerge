@@ -9,7 +9,7 @@ export type DailySubmissionCheck =
   | { ok: false; error: string };
 
 export function validateDailySubmission(input: unknown): DailySubmissionCheck {
-  const obj = (input ?? {}) as { score?: unknown; timeMs?: unknown };
+  const obj = (input ?? {}) as { score?: unknown; timeMs?: unknown; dayKey?: unknown; seed?: unknown };
   const score = Math.floor(Number(obj.score));
   const timeMs = Math.floor(Number(obj.timeMs));
   if (!Number.isFinite(score) || score < 0 || score > DAILY_MAX_SCORE) {

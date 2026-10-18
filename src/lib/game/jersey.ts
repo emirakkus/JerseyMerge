@@ -11,7 +11,7 @@ import { JERSEY_OUTLINE, styleFor, type JerseyStyle } from "./jerseyConfig";
 const SPRITE_SIZE = 320;
 const SPRITE_S = 140;
 
-const cache = new Map<number, HTMLCanvasElement>();
+const cache = new Map<string, HTMLCanvasElement>();
 
 function withAlpha(hex: string, alpha: number): string {
   const v = Number.parseInt(hex.replace("#", ""), 16);
@@ -168,7 +168,7 @@ function drawTierPattern(ctx: CanvasRenderingContext2D, s: number, st: JerseySty
 }
 
 /** Sticker jersey: flat/gradient fill, tier pattern, collar, level number, thick outline. */
-export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyStyle): void {
+export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyStyle, includeNumber = true): void {
   // champion (tier 6) gets a soft gold halo so it reads as premium at a glance
   if (st.tier === 6) {
     const glow = ctx.createRadialGradient(0, 0.1 * s, 0.2 * s, 0, 0.1 * s, 1.22 * s);
@@ -215,18 +215,7 @@ export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyS
   ctx.stroke();
 
   // value number (2, 4, 8 … 2048) — outlined sticker style
-  const digits = String(st.value);
-  const fs =
-    digits.length >= 4 ? s * 0.36 : digits.length === 3 ? s * 0.46 : digits.length === 2 ? s * 0.58 : s * 0.8;
-  ctx.font = `800 ${fs}px "Baloo 2", "Nunito", ui-sans-serif, system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = fs * 0.22;
-  ctx.strokeStyle = JERSEY_OUTLINE;
-  ctx.strokeText(digits, 0, 0.24 * s);
-  ctx.fillStyle = st.number;
-  ctx.fillText(digits, 0, 0.24 * s);
+  if (includeNumber) drawJerseyNumber(ctx, s, st);
 
   // gold trim (thicker for the champion tier)
   if (st.tier >= 5 && st.trim) {
@@ -236,12 +225,33 @@ export function drawJersey(ctx: CanvasRenderingContext2D, s: number, st: JerseyS
     ctx.lineJoin = "round";
     ctx.stroke();
   }
+  // A muted outer keyline keeps darker sleeves distinct from the pitch.
+  silhouettePath(ctx, s);
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  ctx.lineWidth = s * (st.tier === 6 ? 0.07 : st.tier >= 5 ? 0.065 : 0.08);
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
   // thick sticker outline
   silhouettePath(ctx, s);
   ctx.strokeStyle = JERSEY_OUTLINE;
   ctx.lineWidth = s * (st.tier === 6 ? 0.045 : st.tier >= 5 ? 0.04 : 0.055);
   ctx.lineJoin = "round";
   ctx.stroke();
+}
+
+export function drawJerseyNumber(ctx: CanvasRenderingContext2D, s: number, st: JerseyStyle): void {
+  const digits = String(st.value);
+  const fs = digits.length >= 4 ? s * 0.36 : digits.length === 3 ? s * 0.46 : digits.length === 2 ? s * 0.58 : s * 0.8;
+  ctx.font = `800 ${fs}px "Baloo 2", "Nunito", ui-sans-serif, system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = fs * 0.22;
+  ctx.strokeStyle = JERSEY_OUTLINE;
+  ctx.strokeText(digits, 0, 0.24 * s);
+  ctx.fillStyle = st.number;
+  ctx.fillText(digits, 0, 0.24 * s);
 }
 
 /** Golden wild joker form. */
@@ -339,8 +349,9 @@ function drawBombKit(ctx: CanvasRenderingContext2D, s: number): void {
 }
 
 /** Cached 320x320 sprite for a value (jersey / joker / bomb). Client-only. */
-export function getJerseySprite(value: number): HTMLCanvasElement {
-  const cached = cache.get(value);
+export function getJerseySprite(value: number, includeNumber = true): HTMLCanvasElement {
+  const key = includeNumber ? String(value) : `${value}:body`;
+  const cached = cache.get(key);
   if (cached) return cached;
   const canvas = document.createElement("canvas");
   canvas.width = SPRITE_SIZE;
@@ -353,10 +364,10 @@ export function getJerseySprite(value: number): HTMLCanvasElement {
     } else if (value === BOMB_VALUE) {
       drawBombKit(ctx, SPRITE_S);
     } else {
-      drawJersey(ctx, SPRITE_S, styleFor(value));
+      drawJersey(ctx, SPRITE_S, styleFor(value), includeNumber);
     }
   }
-  cache.set(value, canvas);
+  cache.set(key, canvas);
   if (cache.size > 48) {
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);

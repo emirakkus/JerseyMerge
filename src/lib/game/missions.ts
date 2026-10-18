@@ -1,3 +1,6 @@
+import { GAME_UI } from "@/lib/i18n";
+
+
 /**
  * Per-run mission system. Missions observe merge events (new value + chain
  * length) and pay a one-time bonus straight into the score. Pure logic —
@@ -24,9 +27,9 @@ export interface MissionSnapshot {
 }
 
 export const MISSIONS: readonly MissionDefinition[] = [
-  { id: "warmup", title: "Warm-up", description: "Complete 5 merges.", target: 5, reward: 30 },
-  { id: "bigkit", title: "Big kit", description: "Merge up to a 32 jersey.", target: 32, reward: 80 },
-  { id: "showtime", title: "Showtime", description: "Land a 3-chain from a single drop.", target: 3, reward: 100 },
+  { id: "warmup", ...GAME_UI.missions.warmup, target: 5, reward: 30 },
+  { id: "bigkit", ...GAME_UI.missions.bigkit, target: 32, reward: 80 },
+  { id: "showtime", ...GAME_UI.missions.showtime, target: 3, reward: 100 },
 ];
 
 export class MissionTracker {

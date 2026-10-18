@@ -11,7 +11,7 @@ import type { ScoreEntry } from "@/lib/game/scoring";
 import type { DailyBoardEntry } from "@/lib/daily/types";
 import type { DailyQuest } from "@/lib/daily/quests";
 import { sortQuestCards, type QuestCard } from "@/lib/daily/questOrder";
-import { LANG, t, type StringKey } from "@/lib/i18n";
+import { GAME_UI, LANG, t, type StringKey } from "@/lib/i18n";
 
 type TabId = "quests" | "how" | "scores" | "badges";
 
@@ -26,7 +26,7 @@ const TABS: TabDef[] = [
     id: "quests",
     label: "tabQuests",
     icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
         <rect x="3" y="2" width="10" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
         <path d="M5.5 6h5M5.5 9h3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       </svg>
@@ -36,7 +36,7 @@ const TABS: TabDef[] = [
     id: "how",
     label: "tabHow",
     icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
         <circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.6" />
         <path d="M6.2 6.2a1.8 1.8 0 1 1 2.6 1.6c-.5.3-.8.6-.8 1.2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
         <circle cx="8" cy="11.2" r="0.9" fill="currentColor" />
@@ -47,7 +47,7 @@ const TABS: TabDef[] = [
     id: "scores",
     label: "tabScores",
     icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
         <path
           d="M4 2h8v2a4 4 0 0 1-8 0V2ZM4 3H1.5v.5A3.5 3.5 0 0 0 5 7m7-4h2.5v.5A3.5 3.5 0 0 1 11 7m-4.5 3.5h3V13h-3m-1 0h5"
           fill="none"
@@ -62,7 +62,7 @@ const TABS: TabDef[] = [
     id: "badges",
     label: "tabBadges",
     icon: (
-      <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+      <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
         <path d="M8 1.5 9.9 6l4.6.3-3.5 3 1.1 4.5L8 11.2l-4.1 2.6 1.1-4.5-3.5-3L6.1 6z" fill="currentColor" />
       </svg>
     ),
@@ -70,12 +70,7 @@ const TABS: TabDef[] = [
 ];
 
 /** Slow-drifting kit composition (reuses the cached jersey sprites). */
-const HERO_KITS = [
-  { value: 2, left: "6%", top: 26, size: 44, delay: "0s" },
-  { value: 16, left: "30%", top: 4, size: 60, delay: "1.4s" },
-  { value: 64, left: "58%", top: 12, size: 52, delay: "2.8s" },
-  { value: 256, left: "82%", top: 30, size: 44, delay: "4.2s" },
-];
+const HERO_KITS = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048];
 
 export interface DailyBundle {
   dayKey: string;
@@ -88,6 +83,7 @@ export interface DailyBundle {
   isGuest: boolean;
   yourRank: number | null;
   dailyBest: number | null;
+  dailyPlayedScore?: number | null;
 }
 
 interface MainMenuProps {
@@ -152,28 +148,25 @@ export function MainMenu({
     <div className="menu-root absolute inset-0 z-10 flex flex-col bg-gradient-to-b from-[#0F1B3D] via-[#191A4E] to-[#2A1B5C] text-white">
       <div className="menu-scroll menu-scrollable flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {/* side: title + hero scene (shrinks/hides on landscape) */}
-        <div className="menu-side flex flex-col gap-2">
+        <div className="menu-side flex flex-none flex-col gap-2 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
           <h1 className="menu-title m-0 text-center font-display text-[30px] font-extrabold leading-none tracking-tight">
             {s("title")}
           </h1>
-          <p className="menu-tagline m-0 px-4 text-center text-[14px] font-bold text-[#9FB0E8]">
+          <p className="menu-tagline m-0 px-4 text-center text-[14px] font-bold text-[#D8DDF2]">
             {s("tagline")}
           </p>
-          <div className="menu-hero relative mx-2 h-[96px] w-auto" aria-hidden="true">
-            {HERO_KITS.map((k) => (
-              <span
-                key={k.value}
-                className="hero-float absolute"
-                style={{ left: k.left, top: k.top, animationDelay: k.delay }}
-              >
-                <JerseySprite value={k.value} size={k.size} />
+          <div className="menu-hero chain-preview" aria-label={GAME_UI.chainPreview}>
+            {HERO_KITS.map((value, i) => (
+              <span key={value} className="chain-preview-step hero-float" style={{ animationDelay: `${i * 0.18}s` }}>
+                <JerseySprite value={value} size={28} />
+                <span>{value}</span>
               </span>
             ))}
           </div>
         </div>
 
         {/* main: banner, tabs, panel (panel fills remaining height) */}
-        <div className="menu-main flex min-h-0 flex-1 flex-col gap-3">
+        <div className="menu-main flex flex-none flex-col gap-3">
           <div className="flex gap-2">
             {user ? (
               <div className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/10 px-3 py-2 ring-1 ring-[#2EC4B6]/40">
@@ -217,7 +210,7 @@ export function MainMenu({
           <nav
             className="menu-tabs grid grid-cols-4 gap-1 rounded-2xl bg-white/5 p-1"
             role="tablist"
-            aria-label="Menu sections"
+            aria-label={GAME_UI.menuSections}
             onKeyDown={onTabKeyDown}
           >
             {TABS.map((tb, i) => (
@@ -232,6 +225,8 @@ export function MainMenu({
                 aria-controls={`menu-panel-${tb.id}`}
                 id={`menu-tab-${tb.id}`}
                 tabIndex={tab === tb.id ? 0 : -1}
+                aria-label={s(tb.label)}
+                title={s(tb.label)}
                 onClick={() => setTab(tb.id)}
                 className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-1 text-[12.5px] font-extrabold transition ${
                   tab === tb.id
@@ -250,7 +245,7 @@ export function MainMenu({
             id={`menu-panel-${tab}`}
             role="tabpanel"
             aria-labelledby={`menu-tab-${tab}`}
-            className="menu-panel tab-fade menu-fade menu-scrollable flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl bg-white/5 p-3 ring-1 ring-white/10"
+            className="menu-panel tab-fade flex flex-none flex-col rounded-2xl bg-white/5 p-3 ring-1 ring-white/10"
           >
             {tab === "quests" && (
               <QuestsTab
@@ -272,7 +267,6 @@ export function MainMenu({
         <button
           type="button"
           onClick={onPlay}
-          autoFocus
           className="min-h-[60px] flex-[2] rounded-2xl bg-[#FFC93C] font-display text-[23px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_3px_0_#D9A406]"
         >
           {s("play")}
@@ -282,14 +276,19 @@ export function MainMenu({
           onClick={onPlayDaily}
           title={s("dailyAria")}
           aria-label={s("dailyAria")}
-          className="relative flex min-h-[60px] flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#2EC4B6] font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]"
+          className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0 rounded-2xl bg-[#2EC4B6] font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]"
         >
           <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
             <rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
             <path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
             <path d="m6 10 1.5 1.5L10.5 8.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          {s("daily")}
+          <span className="flex items-center gap-1.5">{s("daily")}</span>
+          <span className={`font-sans text-[10px] font-extrabold leading-none ${daily.dailyBest !== null || daily.dailyPlayedScore != null ? "text-[#0F1B3D]" : "daily-status-pulse"}`}>
+            {daily.dailyBest !== null || daily.dailyPlayedScore != null
+              ? `${GAME_UI.dailyCompleted}: ${(daily.dailyBest ?? daily.dailyPlayedScore ?? 0).toLocaleString()}`
+              : GAME_UI.dailyNotPlayed}
+          </span>
           {anyClaimable && (
             <span
               className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-[#FF5A5F] ring-2 ring-[#0F1B3D]"
@@ -360,9 +359,10 @@ function QuestCardView({
 }) {
   const { quest, state, pct } = card;
   const shown = Math.min(quest.progress, quest.target);
+  const rewardName = GAME_UI.powerupNames[quest.reward as keyof typeof GAME_UI.powerupNames];
   return (
     <div
-      className={`relative rounded-2xl p-3 ring-2 ${
+      className={`relative flex h-[116px] flex-col justify-between rounded-2xl p-2.5 ring-2 ${
         state === "claimable"
           ? "claim-pulse bg-[#FFC93C]/10 ring-[#FFC93C]"
           : state === "progress"
@@ -374,10 +374,10 @@ function QuestCardView({
         <p className="m-0 text-[14px] font-extrabold leading-tight text-white">{quest.title}</p>
         <span className="flex shrink-0 items-center gap-1 rounded-lg bg-[#0F1B3D] px-2.5 py-1.5 text-[12.5px] font-extrabold capitalize text-[#FFC93C] ring-1 ring-[#FFC93C]/50">
           <PowerupIcon id={quest.reward} />
-          +1 {quest.reward}
+          +1 {rewardName}
         </span>
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
+      <div className="mt-1.5 flex items-center gap-2">
         <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/10">
           <div
             className={`h-full rounded-full ${state === "progress" ? "bg-[#2EC4B6]" : "bg-[#FFC93C]"}`}
@@ -392,9 +392,9 @@ function QuestCardView({
         <button
           type="button"
           onClick={() => onClaim(quest.id)}
-          className="mt-2.5 min-h-[48px] w-full rounded-xl bg-[#FFC93C] text-[14px] font-extrabold uppercase tracking-wide text-[#0F1B3D] shadow-[0_3px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_1px_0_#D9A406]"
+          className="min-h-[44px] w-full rounded-xl bg-[#FFC93C] text-[14px] font-extrabold uppercase tracking-wide text-[#0F1B3D] shadow-[0_3px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_1px_0_#D9A406]"
         >
-          {s("claim")} +1 {quest.reward}
+          {s("claim")} +1 {rewardName}
         </button>
       )}
       {state === "claimed" && (
@@ -431,7 +431,7 @@ function QuestsTab({
     <>
       <div className="flex items-center justify-between">
         <span className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-[#2EC4B6]">
-          {s("today")} · {daily.dayKey}
+          {s("today")} · {daily.dayKey ? new Date(`${daily.dayKey}T00:00:00Z`).toLocaleDateString("tr-TR", { day: "numeric", month: "long", timeZone: "UTC" }) : ""}
         </span>
         <span className="flex items-center gap-1 rounded-full bg-orange-400/15 px-2 py-0.5 text-[12px] font-extrabold text-orange-300">
           <svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true">

@@ -22,6 +22,7 @@ interface Floater {
   ttl: number;
   color: string;
   size: number;
+  font: string;
 }
 
 interface Ring {
@@ -46,11 +47,13 @@ const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 
 export class FxSystem {
   private particles: Particle[] = [];
+  private particlePool: Particle[] = [];
   private floaters: Floater[] = [];
   private rings: Ring[] = [];
   private flashes: Flash[] = [];
   shake = 0;
   private reducedMotion = false;
+  private offsetValue = { x: 0, y: 0 };
 
   /** With prefers-reduced-motion: particles and rings are off (floaters stay). */
   setReducedMotion(reduced: boolean): void {
@@ -64,24 +67,24 @@ export class FxSystem {
 
   burst(x: number, y: number, colors: string[], count: number, power: number): void {
     if (this.reducedMotion) return;
-    for (let i = 0; i < count; i++) {
+    const available = Math.min(count, 120 - this.particles.length);
+    for (let i = 0; i < available; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = (0.4 + Math.random() * 0.7) * power;
-      this.particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - power * 0.35,
-        life: 0,
-        ttl: 450 + Math.random() * 450,
-        size: 2 + Math.random() * 3.5,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        rect: Math.random() < 0.4,
-        rot: Math.random() * Math.PI,
-        vr: (Math.random() - 0.5) * 0.3,
-      });
+      const particle = this.particlePool.pop() ?? {} as Particle;
+      particle.x = x;
+      particle.y = y;
+      particle.vx = Math.cos(angle) * speed;
+      particle.vy = Math.sin(angle) * speed - power * 0.35;
+      particle.life = 0;
+      particle.ttl = 450 + Math.random() * 450;
+      particle.size = 2 + Math.random() * 3.5;
+      particle.color = colors[Math.floor(Math.random() * colors.length)];
+      particle.rect = Math.random() < 0.4;
+      particle.rot = Math.random() * Math.PI;
+      particle.vr = (Math.random() - 0.5) * 0.3;
+      this.particles.push(particle);
     }
-    if (this.particles.length > 400) this.particles.splice(0, this.particles.length - 400);
   }
 
   ring(x: number, y: number, color: string, maxR: number): void {
@@ -96,36 +99,41 @@ export class FxSystem {
   }
 
   floater(x: number, y: number, text: string, color: string, size: number): void {
-    this.floaters.push({ x, y, text, life: 0, ttl: 780, color, size });
+    this.floaters.push({ x, y, text, life: 0, ttl: 780, color, size, font: `900 ${size}px "Arial Black", "Arial Bold", ui-sans-serif, system-ui, sans-serif` });
   }
 
   update(dt: number): void {
     const k = dt / 16.667;
-    for (const p of this.particles) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
       p.life += dt;
       p.x += p.vx * k;
       p.y += p.vy * k;
       p.vy += 0.16 * k;
       p.vx *= Math.pow(0.985, k);
       p.rot += p.vr * k;
+      if (p.life >= p.ttl) {
+        this.particles.splice(i, 1);
+        this.particlePool.push(p);
+      }
     }
-    this.particles = this.particles.filter((p) => p.life < p.ttl);
-    for (const f of this.floaters) f.life += dt;
-    this.floaters = this.floaters.filter((f) => f.life < f.ttl);
-    for (const r of this.rings) r.life += dt;
-    this.rings = this.rings.filter((r) => r.life < r.ttl);
-    for (const f of this.flashes) f.life += dt;
-    this.flashes = this.flashes.filter((f) => f.life < f.ttl);
+    for (let i = this.floaters.length - 1; i >= 0; i--) {
+      if ((this.floaters[i].life += dt) >= this.floaters[i].ttl) this.floaters.splice(i, 1);
+    }
+    for (let i = this.rings.length - 1; i >= 0; i--) {
+      if ((this.rings[i].life += dt) >= this.rings[i].ttl) this.rings.splice(i, 1);
+    }
+    for (let i = this.flashes.length - 1; i >= 0; i--) {
+      if ((this.flashes[i].life += dt) >= this.flashes[i].ttl) this.flashes.splice(i, 1);
+    }
     this.shake *= Math.pow(0.88, k);
     if (this.shake < 0.05) this.shake = 0;
   }
 
   offset(): { x: number; y: number } {
-    if (this.shake <= 0) return { x: 0, y: 0 };
-    return {
-      x: (Math.random() - 0.5) * 2 * this.shake,
-      y: (Math.random() - 0.5) * 2 * this.shake,
-    };
+    this.offsetValue.x = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;
+    this.offsetValue.y = this.shake > 0 ? (Math.random() - 0.5) * 2 * this.shake : 0;
+    return this.offsetValue;
   }
 
   draw(ctx: CanvasRenderingContext2D): void {
@@ -173,7 +181,7 @@ export class FxSystem {
       const t = f.life / f.ttl;
       const y = f.y - 34 * easeOutCubic(t);
       ctx.globalAlpha = Math.max(0, 1 - t);
-      ctx.font = `900 ${f.size}px "Arial Black", "Arial Bold", ui-sans-serif, system-ui, sans-serif`;
+      ctx.font = f.font;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.lineWidth = 4;
@@ -187,6 +195,7 @@ export class FxSystem {
 
   clear(): void {
     this.particles = [];
+    this.particlePool = [];
     this.floaters = [];
     this.rings = [];
     this.flashes = [];

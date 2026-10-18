@@ -25,6 +25,7 @@ export const users = pgTable(
     /** UTC day key ("YYYY-MM-DD") of the last app open; powers the streak. */
     lastActiveDay: text("last_active_day"),
     streak: integer("streak").notNull().default(0),
+    powerupInventory: jsonb("powerup_inventory").notNull().default({ joker: 1, bomb: 1, scramble: 1 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("users_username_idx").on(t.username)]

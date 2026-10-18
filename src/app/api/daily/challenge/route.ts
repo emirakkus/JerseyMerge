@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { dailyScores } from "@/db/schema";
 import { clientIp, rateLimit } from "@/lib/server/rateLimit";
 import { requireUser } from "@/lib/server/auth";
-import { utcDayKey } from "@/lib/game/prng";
+import { dailySeed, utcDayKey } from "@/lib/game/prng";
 import { validateDailySubmission } from "@/lib/daily/validation";
 import type { DailyChallengeResult, DailyChallengeSubmit } from "@/lib/daily/types";
 
@@ -38,6 +38,9 @@ export async function POST(req: Request) {
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 
   const dayKey = utcDayKey();
+  if (body.dayKey !== dayKey || body.seed !== dailySeed(dayKey)) {
+    return NextResponse.json({ error: "Günlük oyun tohumu doğrulanamadı." }, { status: 400 });
+  }
   const existing = await db
     .select()
     .from(dailyScores)

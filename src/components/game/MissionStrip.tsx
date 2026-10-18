@@ -1,6 +1,7 @@
 "use client";
 
 import type { MissionView } from "@/lib/game/missions";
+import { GAME_UI } from "@/lib/i18n";
 
 interface MissionStripProps {
   missions: MissionView[];
@@ -9,7 +10,7 @@ interface MissionStripProps {
 /** Per-match mission chips (larger text, comfortable tap-free display). */
 export function MissionStrip({ missions }: MissionStripProps) {
   return (
-    <div className="grid grid-cols-3 gap-1.5 px-0.5" aria-label="Per-match missions">
+    <div className="grid grid-cols-3 gap-1.5 px-0.5" aria-label={GAME_UI.missionsLabel}>
       {missions.map((m) => {
         const prog = Math.min(m.progress, m.target);
         return (

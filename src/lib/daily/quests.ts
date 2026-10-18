@@ -1,6 +1,7 @@
 import type { PowerupId } from "../game/powerups.ts";
 import type { GameEvent } from "../game/events.ts";
 import { hashSeed, mulberry32 } from "../game/prng.ts";
+import { GAME_UI } from "../i18n";
 
 /**
  * Daily quests: 3 per UTC day, deterministically derived from the day key,
@@ -27,21 +28,21 @@ interface QuestDef {
 }
 
 const QUEST_POOL: readonly QuestDef[] = [
-  { id: "merges", metric: "merges", targets: [15, 20, 25], reward: "scramble", title: (t) => `Merge ${t} times` },
-  { id: "reachValue", metric: "reachValue", targets: [8, 16, 32], reward: "joker", title: (t) => `Reach a ${t} jersey` },
-  { id: "combo", metric: "maxCombo", targets: [3, 3, 4], reward: "bomb", title: (t) => `Land a x${t} combo` },
-  { id: "score", metric: "score", targets: [150, 200, 300], reward: "joker", title: (t) => `Score ${t} in one match` },
-  { id: "drops", metric: "drops", targets: [10, 12, 15], reward: "scramble", title: (t) => `Drop ${t} jerseys` },
-  { id: "powerups", metric: "powerupsUsed", targets: [1, 2, 2], reward: "bomb", title: (t) => `Use ${t} power-up${t > 1 ? "s" : ""}` },
-  { id: "matches", metric: "matches", targets: [3, 3, 5], reward: "joker", title: (t) => `Complete ${t} matches` },
-  { id: "collection", metric: "collectionPoints", targets: [5, 10, 15], reward: "bomb", title: (t) => `Earn ${t} collection points` },
+  { id: "merges", metric: "merges", targets: [15, 20, 25], reward: "scramble", title: GAME_UI.questTitles.merges },
+  { id: "reachValue", metric: "reachValue", targets: [8, 16, 32], reward: "joker", title: GAME_UI.questTitles.reachValue },
+  { id: "combo", metric: "maxCombo", targets: [3, 3, 4], reward: "bomb", title: GAME_UI.questTitles.combo },
+  { id: "score", metric: "score", targets: [150, 200, 300], reward: "joker", title: GAME_UI.questTitles.score },
+  { id: "drops", metric: "drops", targets: [10, 12, 15], reward: "scramble", title: GAME_UI.questTitles.drops },
+  { id: "powerups", metric: "powerupsUsed", targets: [1, 2, 2], reward: "bomb", title: GAME_UI.questTitles.powerups },
+  { id: "matches", metric: "matches", targets: [3, 3, 5], reward: "joker", title: GAME_UI.questTitles.matches },
+  { id: "collection", metric: "collectionPoints", targets: [5, 10, 15], reward: "bomb", title: GAME_UI.questTitles.collection },
 ];
 
 /** Simple daily quests: exactly 3 per day, fixed, predictable for everyone. */
 export const SIMPLE_DAILY_QUESTS: readonly DailyQuest[] = [
-  { id: "daily_matches", title: "Play 3 matches", metric: "matches", target: 3, reward: "joker" },
-  { id: "daily_score", title: "Reach 1000 points in one match", metric: "score", target: 1000, reward: "bomb" },
-  { id: "daily_merges", title: "Merge 5 jerseys", metric: "merges", target: 5, reward: "scramble" },
+  { id: "daily_matches", title: GAME_UI.simpleQuests.matches, metric: "matches", target: 3, reward: "joker" },
+  { id: "daily_score", title: GAME_UI.simpleQuests.score, metric: "score", target: 1000, reward: "bomb" },
+  { id: "daily_merges", title: GAME_UI.simpleQuests.merges, metric: "merges", target: 5, reward: "scramble" },
 ];
 
 export function getSimpleDailyQuests(): DailyQuest[] {
@@ -63,7 +64,9 @@ export function getDailyQuests(dayKey: string): DailyQuest[] {
 
 /** Is a given id a valid quest for that day? (used by the claim endpoint.) */
 export function isValidQuestForDay(dayKey: string, questId: string): DailyQuest | null {
-  return getDailyQuests(dayKey).find((q) => q.id === questId) ?? null;
+  return getDailyQuests(dayKey).find((q) => q.id === questId)
+    ?? SIMPLE_DAILY_QUESTS.find((q) => q.id === questId)
+    ?? null;
 }
 
 export interface QuestCounters {

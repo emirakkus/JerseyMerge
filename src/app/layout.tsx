@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { META_DESCRIPTION } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Jersey Merge",
-  description:
-    "A physics merge puzzle: drop football jerseys, combine matching kits and build your way up to 2048.",
+  description: META_DESCRIPTION,
   applicationName: "Jersey Merge",
   appleWebApp: {
     capable: true,
@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <body className="antialiased">
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" type="image/png" href="/icons/icon-512.png" />

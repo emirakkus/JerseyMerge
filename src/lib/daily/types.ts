@@ -28,6 +28,8 @@ export interface DailyStateResponse {
 export interface DailyChallengeSubmit {
   score: number;
   timeMs: number;
+  dayKey: string;
+  seed: number;
 }
 
 export interface DailyChallengeResult {
@@ -45,6 +47,7 @@ export interface DailyClaimRequest {
 export interface DailyClaimResult {
   reward: { questId: string; powerup: string };
   claimed: string[];
+  stock?: { joker: number; bomb: number; scramble: number };
 }
 
 export interface TouchResult {
@@ -64,4 +67,6 @@ export interface DailyResultInfo {
   rank?: number;
   best?: number;
   isNewBest?: boolean;
+  maxValue?: number;
+  streak?: number;
 }

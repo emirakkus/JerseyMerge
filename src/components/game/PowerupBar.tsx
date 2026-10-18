@@ -2,6 +2,7 @@
 
 import { POWERUPS, type PowerupId, type PowerupSnapshot } from "@/lib/game/powerups";
 import { GAME_UI } from "@/lib/i18n";
+import { useEffect, useRef, useState } from "react";
 
 interface PowerupBarProps {
   snapshot: PowerupSnapshot;
@@ -70,26 +71,60 @@ function PowerupIcon({ id }: { id: string }) {
 
 /** Compact icon-only power-up row with touch sized targets. */
 export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
+  const [bombArmed, setBombArmed] = useState(false);
+  const [touchHelp, setTouchHelp] = useState<PowerupId | null>(null);
+  const bombTimer = useRef<number | null>(null);
+  const helpTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (bombTimer.current !== null) window.clearTimeout(bombTimer.current);
+    if (helpTimer.current !== null) window.clearTimeout(helpTimer.current);
+  }, []);
   return (
     <div className="powerup-shell">
       <div className="powerup-grid" role="group" aria-label={GAME_UI.powerups}>
         {POWERUPS.map((p) => {
           const count = snapshot.inventory[p.id];
-          const disabled = !canPlay || count <= 0 || (p.id === "undo" && !snapshot.canUndo);
+          const disabled = !canPlay || count <= 0 || snapshot.used[p.id] >= p.max || (p.id === "undo" && !snapshot.canUndo);
           const active = !disabled;
           const name = GAME_UI.powerupNames[p.id];
           return (
             <button
               key={p.id}
               type="button"
-              onClick={() => onUse(p.id)}
+              onClick={() => {
+                if (p.id !== "bomb") return onUse(p.id);
+                if (bombArmed) {
+                  if (bombTimer.current !== null) window.clearTimeout(bombTimer.current);
+                  setBombArmed(false);
+                  onUse(p.id);
+                } else {
+                  setBombArmed(true);
+                  bombTimer.current = window.setTimeout(() => setBombArmed(false), 1800);
+                }
+              }}
               disabled={disabled}
               data-tooltip={`${name} · ${p.key} — ${GAME_UI.powerupHelp[p.id]}`}
-              aria-label={`${name}, ${GAME_UI.powerupCount(count)}. ${GAME_UI.powerupHelp[p.id]}`}
+              data-touch-help={touchHelp === p.id ? "true" : undefined}
+              onPointerDown={(event) => {
+                if (event.pointerType !== "touch") return;
+                helpTimer.current = window.setTimeout(() => setTouchHelp(p.id), 500);
+              }}
+              onPointerUp={() => {
+                if (helpTimer.current !== null) window.clearTimeout(helpTimer.current);
+                helpTimer.current = null;
+                window.setTimeout(() => setTouchHelp(null), 1500);
+              }}
+              onPointerLeave={() => {
+                if (helpTimer.current !== null) window.clearTimeout(helpTimer.current);
+                helpTimer.current = null;
+                setTouchHelp(null);
+              }}
+              onContextMenu={(event) => event.preventDefault()}
+              aria-label={bombArmed && p.id === "bomb" ? GAME_UI.confirmBomb : `${name}, ${GAME_UI.powerupCount(count)}. ${GAME_UI.powerupHelp[p.id]}`}
               className={`powerup-button ${active ? `is-available ${ACTIVE_RING[p.id]}` : "is-empty"}`}
             >
               <PowerupIcon id={p.id} />
-              <span className="powerup-count">{count}</span>
+              <span className="powerup-count">{bombArmed && p.id === "bomb" ? "!" : count}</span>
             </button>
           );
         })}

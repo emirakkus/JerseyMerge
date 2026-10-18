@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ApiUser } from "@/lib/api";
+import { GAME_UI } from "@/lib/i18n";
 
 type Mode = "login" | "register";
 
@@ -23,10 +24,28 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   const submit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (busy) return;
+    if (!username.trim() || !password) {
+      setError(GAME_UI.auth.errors.required);
+      return;
+    }
+    if (password.length < 8 || password.length > 64) {
+      setError(GAME_UI.auth.errors.passwordLength);
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -37,7 +56,7 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
       });
       const data = (await res.json()) as { user?: ApiUser; token?: string; error?: string };
       if (!res.ok || !data.user || !data.token) {
-        setError(data.error ?? "Something went wrong.");
+        setError(data.error ?? GAME_UI.auth.errors.generic);
         return;
       }
       try {
@@ -49,7 +68,7 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
       onAuthed(data.user);
       onClose();
     } catch {
-      setError("Could not reach the server. Try again.");
+      setError(GAME_UI.auth.errors.connection);
     } finally {
       setBusy(false);
     }
@@ -88,25 +107,34 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[#0B1229]/80 p-4 backdrop-blur-[2px]">
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[#0B1229]/80 p-4 backdrop-blur-[2px]"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      onTouchStart={(event) => { touchStartY.current = event.touches[0]?.clientY ?? null; }}
+      onTouchEnd={(event) => {
+        const endY = event.changedTouches[0]?.clientY;
+        if (touchStartY.current !== null && endY !== undefined && endY - touchStartY.current > 80) onClose();
+        touchStartY.current = null;
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={user ? "Account" : "Sign in or create account"}
-        className="w-full max-w-[360px] overflow-y-auto rounded-3xl bg-[#16204A] p-5 text-white shadow-2xl ring-1 ring-white/10 max-h-[88dvh]"
+        aria-label={user ? GAME_UI.auth.account : GAME_UI.auth.dialog}
+        className="relative w-full max-w-[360px] overflow-y-auto rounded-3xl bg-[#16204A] p-5 pt-12 text-white shadow-2xl ring-1 ring-white/10 max-h-[88dvh]"
       >
+        <button type="button" onClick={onClose} aria-label={GAME_UI.auth.close} title={GAME_UI.auth.close}
+          className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-xl font-bold text-white hover:bg-white/15">×</button>
         {user ? (
           <div className="text-center">
-            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#2EC4B6]">Signed in</p>
+            <p className="m-0 text-[11px] font-extrabold tracking-[0.2em] text-[#2EC4B6]">{GAME_UI.auth.signedIn}</p>
             <div className="mx-auto mt-3 flex w-fit items-center gap-3">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2EC4B6] font-display text-xl text-[#0F1B3D]">
                 {user.username.charAt(0).toUpperCase()}
               </span>
               <div className="text-left">
                 <p className="m-0 font-display text-[19px] leading-tight text-white">{user.username}</p>
-                <p className="m-0 text-[12.5px] font-bold text-[#9FB0E8]">
-                  Best {user.bestScore.toLocaleString()} pts · streak {user.streak ?? 0} day
-                </p>
+                <p className="m-0 text-[12.5px] font-bold text-[#C7CCEA]">{GAME_UI.auth.bestAndStreak(user.bestScore, user.streak ?? 0)}</p>
               </div>
             </div>
               <div className="mt-5 flex flex-col gap-2">
@@ -116,24 +144,24 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                 disabled={busy}
                 className="min-h-[52px] rounded-2xl bg-white/5 px-5 py-3 text-[14px] font-extrabold text-[#FF7A7D] ring-1 ring-[#FF5A5F]/30 transition hover:bg-white/10 active:scale-[0.98] disabled:opacity-50"
               >
-                Sign out
+                {GAME_UI.auth.signOut}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="min-h-[52px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display text-[16px] tracking-wide text-[#0F1B3D] transition hover:bg-[#FFD76A] active:scale-[0.98]"
               >
-                Close
+                {GAME_UI.auth.close}
               </button>
             </div>
           </div>
         ) : (
           <>
             <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#2EC4B6]">
-              Jersey Merge
+              {GAME_UI.title}
             </p>
             <h2 className="m-0 mt-1 font-display text-[24px] leading-tight text-white">
-              {mode === "login" ? "Welcome back!" : "Join the team!"}
+              {mode === "login" ? GAME_UI.auth.welcome : GAME_UI.auth.join}
             </h2>
 
             <div className="mt-3 grid grid-cols-2 gap-1 rounded-2xl bg-white/5 p-1">
@@ -149,7 +177,7 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                     mode === m ? "bg-[#FFC93C] text-[#0F1B3D]" : "text-[#C7CCEA] hover:text-white"
                   }`}
                 >
-                  {m === "login" ? "Sign in" : "Create account"}
+                  {m === "login" ? GAME_UI.auth.signIn : GAME_UI.auth.createAccount}
                 </button>
               ))}
             </div>
@@ -168,39 +196,46 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                   <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
                   <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
                 </svg>
-                Continue with Google
+                {GAME_UI.auth.google}
               </button>
             )}
 
-            <form onSubmit={(e) => void submit(e)} className="mt-3 flex flex-col gap-2">
+            <form noValidate onSubmit={(e) => void submit(e)} className="mt-3 flex flex-col gap-2">
               <label className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
-                <span className="shrink-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#9FB0E8]">
-                  Name
+                <span className="shrink-0 text-[11.5px] font-extrabold tracking-[0.1em] text-[#C7CCEA]">
+                  {GAME_UI.auth.username}
                 </span>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   maxLength={14}
                   autoComplete="username"
-                  aria-label="Username"
+                  aria-label={GAME_UI.auth.username}
                   placeholder="star_kick"
-                  className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#4A5680]"
+                  className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#AEB8D6]"
                 />
               </label>
               <label className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-white/5 px-3.5 py-2.5 ring-1 ring-white/10 focus-within:ring-[#2EC4B6]">
-                <span className="shrink-0 text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[#9FB0E8]">
-                  Password
+                <span className="shrink-0 text-[11.5px] font-extrabold tracking-[0.1em] text-[#C7CCEA]">
+                  {GAME_UI.auth.password}
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   maxLength={64}
+                  minLength={8}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  aria-label="Password"
-                  placeholder="min 4 characters"
-                  className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#4A5680]"
+                  aria-label={GAME_UI.auth.password}
+                  placeholder={GAME_UI.auth.passwordPlaceholder}
+                  className="m-0 w-full min-w-0 bg-transparent text-right text-[14px] font-bold text-white outline-none placeholder:text-[#AEB8D6]"
                 />
+                <button type="button" onClick={() => setShowPassword((shown) => !shown)}
+                  aria-label={showPassword ? GAME_UI.auth.hidePassword : GAME_UI.auth.showPassword}
+                  aria-pressed={showPassword}
+                  className="shrink-0 rounded-lg px-2 py-2 text-xs font-extrabold text-[#C7CCEA] hover:text-white">
+                  {showPassword ? GAME_UI.auth.hidePassword : GAME_UI.auth.showPassword}
+                </button>
               </label>
 
               {error && (
@@ -217,19 +252,17 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
                 disabled={busy}
                 className="mt-1 min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406] disabled:opacity-60"
               >
-                {busy ? "One second…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
+                {busy ? GAME_UI.auth.working : mode === "login" ? GAME_UI.auth.signIn : GAME_UI.auth.createAccount}
               </button>
             </form>
 
-            <p className="m-0 mt-3 text-[12.5px] font-semibold leading-snug text-[#9FB0E8]">
-              Your scores, streak, collection and trophies sync to your account.
-            </p>
+            <p className="m-0 mt-3 text-[12.5px] font-semibold leading-snug text-[#C7CCEA]">{GAME_UI.auth.description}</p>
             <button
               type="button"
               onClick={onClose}
-              className="mt-1 min-h-[48px] text-[13px] font-extrabold text-[#9FB0E8] transition hover:text-white"
+              className="mt-1 min-h-[48px] text-[13px] font-extrabold text-[#C7CCEA] transition hover:text-white"
             >
-              Play without an account
+              {GAME_UI.auth.guestContinue}
             </button>
           </>
         )}
