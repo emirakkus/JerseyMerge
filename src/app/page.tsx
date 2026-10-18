@@ -243,12 +243,22 @@ export default function HomePage() {
   const handleScore = useCallback((s: number, b: number) => {
     setScore(s);
     setBest(b);
+    if (modeRef.current === "daily") {
+      const dk = dayKey || utcDayKey();
+      setDailyPlayedScore((current) => Math.max(current ?? 0, s));
+      try {
+        const raw = window.localStorage.getItem("jersey-merge.daily-played");
+        const saved = raw ? JSON.parse(raw) as { dayKey?: string; score?: number } : null;
+        const previous = saved?.dayKey === dk && typeof saved.score === "number" ? saved.score : 0;
+        window.localStorage.setItem("jersey-merge.daily-played", JSON.stringify({ dayKey: dk, score: Math.max(previous, s) }));
+      } catch { /* storage may be unavailable */ }
+    }
     if (s > 0) {
       setCheering(true);
       if (cheerTimer.current !== null) window.clearTimeout(cheerTimer.current);
       cheerTimer.current = window.setTimeout(() => setCheering(false), 800);
     }
-  }, []);
+  }, [dayKey]);
 
   const handleNext = useCallback((v: number) => setNext(v), []);
   const handleUpcoming = useCallback((v: number) => setUpcoming(v), []);
