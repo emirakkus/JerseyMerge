@@ -47,7 +47,22 @@ export async function POST(req: Request) {
     )
     .limit(1);
   if (already.length > 0) {
-    return NextResponse.json({ error: "Already claimed today." }, { status: 409 });
+    // Idempotent retry: sync the client's claim state and inventory without
+    // granting the reward again (for example after a lost response or stale UI).
+    const all = await db
+      .select({ questId: dailyQuestClaims.questId })
+      .from(dailyQuestClaims)
+      .where(and(eq(dailyQuestClaims.userId, user.id), eq(dailyQuestClaims.dayKey, dayKey)));
+    const [account] = await db
+      .select({ stock: users.powerupInventory })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+    return NextResponse.json({
+      reward: { questId: quest.id, powerup: quest.reward },
+      claimed: all.map((c) => c.questId),
+      stock: account?.stock,
+    });
   }
 
   await db.insert(dailyQuestClaims).values({ userId: user.id, dayKey, questId: quest.id });
