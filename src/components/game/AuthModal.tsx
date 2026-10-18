@@ -85,15 +85,15 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
           return null;
         }
       })();
-      if (token) {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }).catch(() => {
-          /* ignore */
-        });
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) {
+        setError(GAME_UI.auth.errors.connection);
+        return;
       }
-    } finally {
       try {
         window.localStorage.removeItem("jersey-merge.token");
         window.localStorage.removeItem("jersey-merge.user");
@@ -102,6 +102,9 @@ export function AuthModal({ user, googleEnabled, onClose, onAuthed, onSignedOut 
       }
       onSignedOut();
       onClose();
+    } catch {
+      setError(GAME_UI.auth.errors.connection);
+    } finally {
       setBusy(false);
     }
   };

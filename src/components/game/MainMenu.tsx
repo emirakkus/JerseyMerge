@@ -125,6 +125,7 @@ export function MainMenu({
   onLockedFieldTheme,
 }: MainMenuProps) {
   const [tab, setTab] = useState<TabId>("quests");
+  const [pendingMode, setPendingMode] = useState<"classic" | "daily" | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   const s = (key: StringKey): string => t(LANG, key) as string;
@@ -140,6 +141,30 @@ export function MainMenu({
     }))
   );
   const anyClaimable = questCards.some((c) => c.state === "claimable");
+  const currentTheme = FIELD_THEMES.find((theme) => theme.id === selectedFieldTheme) ?? FIELD_THEMES[0];
+  const themeCards = FIELD_THEMES.map((theme) => {
+    const unlocked = theme.unlockLevel <= playerLevel;
+    const selected = selectedFieldTheme === theme.id;
+    const isNew = unlocked && !seenFieldThemes.includes(theme.id);
+    return (
+      <button
+        key={theme.id}
+        type="button"
+        className={`field-theme-card${selected ? " is-selected" : ""}${unlocked ? "" : " is-locked"}`}
+        aria-pressed={selected}
+        aria-label={unlocked ? `${theme.name}${selected ? `, ${GAME_UI.fieldThemes.selected}` : ""}` : `${theme.name}, ${GAME_UI.fieldThemes.locked(theme.unlockLevel)}`}
+        onClick={() => unlocked ? onSelectFieldTheme(theme.id) : onLockedFieldTheme(theme.name)}
+      >
+        <span className="field-theme-preview" style={{ background: theme.preview }} aria-hidden="true">
+          <span className="field-theme-preview-lines" />
+          {!unlocked && <span className="field-theme-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="8" rx="1.8" fill="#f5f6ff"/><path d="M5 7V5a3 3 0 1 1 6 0v2" fill="none" stroke="#f5f6ff" strokeWidth="1.8"/></svg></span>}
+          {isNew && <span className="field-theme-new">{GAME_UI.fieldThemes.newBadge}</span>}
+        </span>
+        <span className="field-theme-name">{theme.name}</span>
+        {!unlocked && <span className="field-theme-unlock">{GAME_UI.fieldThemes.locked(theme.unlockLevel)}</span>}
+      </button>
+    );
+  });
 
   const onTabKeyDown = (e: React.KeyboardEvent): void => {
     const idx = tabRefs.current.findIndex((el) => el === document.activeElement);
@@ -157,20 +182,16 @@ export function MainMenu({
 
   return (
     <div className="menu-root absolute inset-0 z-10 flex flex-col bg-gradient-to-b from-[#0F1B3D] via-[#191A4E] to-[#2A1B5C] text-white">
+      <div className={`menu-content${pendingMode ? " is-dimmed" : ""}`}>
       <div className="menu-scroll menu-scrollable flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {/* side: title + hero scene (shrinks/hides on landscape) */}
         <div className="menu-side flex flex-none flex-col gap-2 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-          <h1 className="menu-title m-0 text-center font-display text-[30px] font-extrabold leading-none tracking-tight">
-            {s("title")}
-          </h1>
-          <p className="menu-tagline m-0 px-4 text-center text-[14px] font-bold text-[#D8DDF2]">
-            {s("tagline")}
-          </p>
+          <h1 className="menu-title m-0 text-center font-display text-[30px] font-extrabold leading-none tracking-tight">{s("title")}</h1>
+          <p className="menu-tagline m-0 px-4 text-center text-[14px] font-bold text-[#D8DDF2]">{s("tagline")}</p>
           <div className="menu-hero chain-preview" aria-label={GAME_UI.chainPreview}>
             {HERO_KITS.map((value, i) => (
               <span key={value} className="chain-preview-step hero-float" style={{ animationDelay: `${i * 0.18}s` }}>
-                <JerseySprite value={value} size={28} />
-                <span>{value}</span>
+                <JerseySprite value={value} size={28} /><span>{value}</span>
               </span>
             ))}
           </div>
@@ -181,91 +202,26 @@ export function MainMenu({
           <div className="flex gap-2">
             {user ? (
               <div className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/10 px-3 py-2 ring-1 ring-[#2EC4B6]/40">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2EC4B6] font-display text-lg text-[#0F1B3D]">
-                  {user.username.charAt(0).toUpperCase()}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[14px] font-extrabold">{user.username}</span>
-                  <span className="block text-[12.5px] font-bold text-[#2EC4B6]">{s("signedIn")}</span>
-                </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2EC4B6] font-display text-lg text-[#0F1B3D]">{user.username.charAt(0).toUpperCase()}</span>
+                <span className="min-w-0"><span className="block truncate text-[14px] font-extrabold">{user.username}</span><span className="block text-[12.5px] font-bold text-[#2EC4B6]">{s("signedIn")}</span></span>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={onOpenAuth}
-                className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/15 px-3.5 py-2.5 text-left ring-1 ring-[#2EC4B6]/40 transition hover:bg-[#2EC4B6]/25 active:scale-[0.99]"
-              >
-                <svg width="22" height="22" viewBox="0 0 16 16" className="shrink-0 text-[#2EC4B6]" aria-hidden="true">
-                  <circle cx="8" cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
-                  <path
-                    d="M2.5 14c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                  />
-                </svg>
+              <button type="button" onClick={onOpenAuth} className="flex min-h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl bg-[#2EC4B6]/15 px-3.5 py-2.5 text-left ring-1 ring-[#2EC4B6]/40 transition hover:bg-[#2EC4B6]/25 active:scale-[0.99]">
+                <svg width="22" height="22" viewBox="0 0 16 16" className="shrink-0 text-[#2EC4B6]" aria-hidden="true"><circle cx="8" cy="5" r="3" fill="none" stroke="currentColor" strokeWidth="1.7" /><path d="M2.5 14c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
                 <span className="text-[14px] font-extrabold leading-tight">{s("signIn")}</span>
               </button>
             )}
-            <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-[#FFC93C]/15 px-3.5 ring-1 ring-[#FFC93C]/30">
-              <span className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
-                {s("best")}
-              </span>
-              <span className="font-display text-[17px] leading-none tabular-nums text-[#FFC93C]">
-                {best.toLocaleString()}
-              </span>
-            </div>
+            <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-[#FFC93C]/15 px-3.5 ring-1 ring-[#FFC93C]/30"><span className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">{s("best")}</span><span className="font-display text-[17px] leading-none tabular-nums text-[#FFC93C]">{best.toLocaleString()}</span></div>
           </div>
 
-          <nav
-            className="menu-tabs grid grid-cols-4 gap-1 rounded-2xl bg-white/5 p-1"
-            role="tablist"
-            aria-label={GAME_UI.menuSections}
-            onKeyDown={onTabKeyDown}
-          >
+          <nav className="menu-tabs grid grid-cols-4 gap-1 rounded-2xl bg-white/5 p-1" role="tablist" aria-label={GAME_UI.menuSections} onKeyDown={onTabKeyDown}>
             {TABS.map((tb, i) => (
-              <button
-                key={tb.id}
-                ref={(el) => {
-                  tabRefs.current[i] = el;
-                }}
-                type="button"
-                role="tab"
-                aria-selected={tab === tb.id}
-                aria-controls={`menu-panel-${tb.id}`}
-                id={`menu-tab-${tb.id}`}
-                tabIndex={tab === tb.id ? 0 : -1}
-                aria-label={s(tb.label)}
-                title={s(tb.label)}
-                onClick={() => setTab(tb.id)}
-                className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-1 text-[12.5px] font-extrabold transition ${
-                  tab === tb.id
-                    ? "bg-[#FFC93C] text-[#0F1B3D]"
-                    : "text-[#C7CCEA] hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {tb.icon}
-                <span className="hidden min-[400px]:inline">{s(tb.label)}</span>
-              </button>
+              <button key={tb.id} ref={(el) => { tabRefs.current[i] = el; }} type="button" role="tab" aria-selected={tab === tb.id} aria-controls={`menu-panel-${tb.id}`} id={`menu-tab-${tb.id}`} tabIndex={tab === tb.id ? 0 : -1} aria-label={s(tb.label)} title={s(tb.label)} onClick={() => setTab(tb.id)} className={`flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl px-1 text-[12.5px] font-extrabold transition ${tab === tb.id ? "bg-[#FFC93C] text-[#0F1B3D]" : "text-[#C7CCEA] hover:bg-white/5 hover:text-white"}`}>{tb.icon}<span className="hidden min-[400px]:inline">{s(tb.label)}</span></button>
             ))}
           </nav>
 
-          <div
-            key={tab}
-            id={`menu-panel-${tab}`}
-            role="tabpanel"
-            aria-labelledby={`menu-tab-${tab}`}
-            className="menu-panel tab-fade flex flex-none flex-col rounded-2xl bg-white/5 p-3 ring-1 ring-white/10"
-          >
-            {tab === "quests" && (
-              <QuestsTab
-                s={s}
-                daily={daily}
-                cards={questCards}
-                onClaim={onClaimQuest}
-              />
-            )}
+          <div key={tab} id={`menu-panel-${tab}`} role="tabpanel" aria-labelledby={`menu-tab-${tab}`} className="menu-panel tab-fade flex flex-none flex-col rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
+            {tab === "quests" && <QuestsTab s={s} daily={daily} cards={questCards} onClaim={onClaimQuest} />}
             {tab === "how" && <HowTab s={s} />}
             {tab === "scores" && <ScoresTab s={s} top={top} globalTop={globalTop} user={user} />}
             {tab === "badges" && <BadgesTab owned={ownedBadges} />}
@@ -274,70 +230,47 @@ export function MainMenu({
       </div>
 
       {/* bottom actions: safe-area aware */}
-      <div className="menu-footer flex flex-col gap-2 px-3 pt-2">
-        <section className="field-theme-picker" aria-label={GAME_UI.fieldThemes.heading}>
-          <div className="field-theme-heading">{GAME_UI.fieldThemes.heading}</div>
-          <div className="field-theme-list">
-            {FIELD_THEMES.map((theme) => {
-              const unlocked = theme.unlockLevel <= playerLevel;
-              const selected = selectedFieldTheme === theme.id;
-              const isNew = unlocked && !seenFieldThemes.includes(theme.id);
-              return (
-                <button
-                  key={theme.id}
-                  type="button"
-                  className={`field-theme-card${selected ? " is-selected" : ""}${unlocked ? "" : " is-locked"}`}
-                  aria-pressed={selected}
-                  aria-label={unlocked ? `${theme.name}${selected ? `, ${GAME_UI.fieldThemes.selected}` : ""}` : `${theme.name}, ${GAME_UI.fieldThemes.locked(theme.unlockLevel)}`}
-                  onClick={() => unlocked ? onSelectFieldTheme(theme.id) : onLockedFieldTheme(theme.name)}
-                >
-                  <span className="field-theme-preview" style={{ background: theme.preview }} aria-hidden="true">
-                    <span className="field-theme-preview-lines" />
-                    {!unlocked && <span className="field-theme-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="8" rx="1.8" fill="#f5f6ff"/><path d="M5 7V5a3 3 0 1 1 6 0v2" fill="none" stroke="#f5f6ff" strokeWidth="1.8"/></svg></span>}
-                    {isNew && <span className="field-theme-new">{GAME_UI.fieldThemes.newBadge}</span>}
-                  </span>
-                  <span className="field-theme-name">{theme.name}</span>
-                  {!unlocked && <span className="field-theme-unlock">{GAME_UI.fieldThemes.locked(theme.unlockLevel)}</span>}
-                </button>
-              );
-            })}
+      <div className="menu-footer px-4 pt-3"><div className="flex gap-2">
+        <button type="button" onClick={() => setPendingMode("classic")} className="min-h-[60px] flex-[2] rounded-2xl bg-[#FFC93C] font-display text-[23px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_3px_0_#D9A406]">{s("play")}</button>
+        <button type="button" onClick={() => setPendingMode("daily")} title={s("dailyAria")} aria-label={s("dailyAria")} className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0 rounded-2xl bg-[#2EC4B6] font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]">
+          <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /><path d="m6 10 1.5 1.5L10.5 8.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <span className="flex items-center gap-1.5">{s("daily")}</span>
+          <span className={`font-sans text-[10px] font-extrabold leading-none ${daily.dailyBest !== null || daily.dailyPlayedScore != null ? "text-[#0F1B3D]" : "daily-status-pulse"}`}>{daily.dailyBest !== null || daily.dailyPlayedScore != null ? `${GAME_UI.dailyCompleted}: ${(daily.dailyBest ?? daily.dailyPlayedScore ?? 0).toLocaleString()}` : GAME_UI.dailyNotPlayed}</span>
+          {anyClaimable && <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-[#FF5A5F] ring-2 ring-[#0F1B3D]" aria-hidden="true" />}
+        </button>
+      </div></div>
+      </div>
+
+      {pendingMode && (
+        <div className="field-choice-overlay" onClick={(event) => { if (event.target === event.currentTarget) setPendingMode(null); }}>
+        <section className="field-choice-screen" role="dialog" aria-modal="true" aria-label={GAME_UI.fieldThemes.chooseTitle}>
+          <span className="field-choice-handle" aria-hidden="true" />
+          <div className="field-choice-heading">
+            <button type="button" className="field-choice-back" onClick={() => setPendingMode(null)} aria-label={GAME_UI.fieldThemes.backToMenu}>‹</button>
+            <div>
+              <h1>{GAME_UI.fieldThemes.chooseTitle}</h1>
+              <p>{GAME_UI.fieldThemes.chooseDescription}</p>
+            </div>
+          </div>
+          <div className="field-theme-list field-choice-list" aria-label={GAME_UI.fieldThemes.heading}>{themeCards}</div>
+          <div className="field-choice-stage" style={{ background: currentTheme.preview }} aria-label={`${GAME_UI.fieldThemes.selected}: ${currentTheme.name}`}>
+            <span className="field-choice-stage-name">{GAME_UI.fieldThemes.selected}: {currentTheme.name}</span>
+            <span className="field-choice-stage-lines" aria-hidden="true" />
+            <JerseySprite value={2} size={58} className="field-choice-stage-jersey" />
+          </div>
+          <div className="field-choice-actions">
+            <button
+              type="button"
+              onClick={() => { const mode = pendingMode; setPendingMode(null); if (mode === "daily") onPlayDaily(); else onPlay(); }}
+              className="field-choice-start"
+            >
+              {pendingMode === "daily" ? GAME_UI.fieldThemes.startDaily : GAME_UI.fieldThemes.startClassic}
+            </button>
+            <button type="button" className="field-choice-menu" onClick={() => setPendingMode(null)}>{GAME_UI.fieldThemes.backToMenu}</button>
           </div>
         </section>
-        <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onPlay}
-          className="min-h-[60px] flex-[2] rounded-2xl bg-[#FFC93C] font-display text-[23px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_3px_0_#D9A406]"
-        >
-          {s("play")}
-        </button>
-        <button
-          type="button"
-          onClick={onPlayDaily}
-          title={s("dailyAria")}
-          aria-label={s("dailyAria")}
-          className="relative flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0 rounded-2xl bg-[#2EC4B6] font-display text-[16px] tracking-wide text-[#0F1B3D] shadow-[0_5px_0_#1E8A80] transition hover:bg-[#4FD4C8] active:translate-y-[2px] active:shadow-[0_3px_0_#1E8A80]"
-        >
-          <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true">
-            <rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M2 6.5h12M5.5 1.8v2.4M10.5 1.8v2.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            <path d="m6 10 1.5 1.5L10.5 8.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="flex items-center gap-1.5">{s("daily")}</span>
-          <span className={`font-sans text-[10px] font-extrabold leading-none ${daily.dailyBest !== null || daily.dailyPlayedScore != null ? "text-[#0F1B3D]" : "daily-status-pulse"}`}>
-            {daily.dailyBest !== null || daily.dailyPlayedScore != null
-              ? `${GAME_UI.dailyCompleted}: ${(daily.dailyBest ?? daily.dailyPlayedScore ?? 0).toLocaleString()}`
-              : GAME_UI.dailyNotPlayed}
-          </span>
-          {anyClaimable && (
-            <span
-              className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full bg-[#FF5A5F] ring-2 ring-[#0F1B3D]"
-              aria-hidden="true"
-            />
-          )}
-        </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

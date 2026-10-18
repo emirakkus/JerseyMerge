@@ -11,6 +11,11 @@ export const GAME_UI = {
   title: "JERSEY MERGE",
   fieldThemes: {
     heading: "SAHA",
+    chooseTitle: "Sahanı seç",
+    chooseDescription: "Açık sahalardan birini seç ve maça başla.",
+    startClassic: "MAÇA BAŞLA",
+    startDaily: "GÜNLÜK MAÇA BAŞLA",
+    backToMenu: "ANA MENÜ",
     locked: (level: number) => `Sv. ${level}'te açılır`,
     newlyUnlocked: (name: string) => `Yeni saha açıldı: ${name}`,
     newBadge: "YENİ",

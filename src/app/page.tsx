@@ -55,7 +55,7 @@ import type { ProgressState } from "@/lib/progress/types";
 import { emptyProgress } from "@/lib/progress/types";
 import { ProgressOverlay } from "@/components/game/ProgressOverlay";
 import { LeaderboardModal } from "@/components/game/LeaderboardModal";
-import { api, getCachedUser, getToken, setToken, type ApiUser } from "@/lib/api";
+import { api, getCachedUser, getToken, setCachedUser, setToken, type ApiUser } from "@/lib/api";
 import {
   addLifetimeStats,
   loadBest,
@@ -213,6 +213,7 @@ export default function HomePage() {
         if (status === 401) {
           setUser(null);
           setToken(null);
+          setCachedUser(null);
         }
       });
     api<{ google: boolean }>("/api/auth/config")
@@ -706,6 +707,8 @@ export default function HomePage() {
 
   const handleSignedOut = useCallback(() => {
     setUser(null);
+    setToken(null);
+    setCachedUser(null);
     setTop(loadTopScores());
     setBadges(loadOwnedBadges());
     setBest(loadBest());
