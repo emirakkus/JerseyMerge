@@ -8,6 +8,7 @@ import type { DailyResultInfo } from "@/lib/daily/types";
 import { rankBadgeClass } from "./Leaderboard";
 import { GAME_UI } from "@/lib/i18n";
 import { useState } from "react";
+import { createChallengeCode, type FriendChallenge } from "@/lib/game/friendChallenge";
 
 interface GameOverModalProps {
   score: number;
@@ -18,7 +19,13 @@ interface GameOverModalProps {
   newBadges: string[];
   newTrophies?: string[];
   daily?: DailyResultInfo | null;
+  challenge?: FriendChallenge | null;
+  challengeSeed: number;
+  challengeMaxLevel: number;
+  playerName: string;
+  allowFriendChallenge: boolean;
   onPlayAgain: () => void;
+  onRematch: (challenge: FriendChallenge) => void;
   onMenu: () => void;
 }
 
@@ -38,10 +45,37 @@ export function GameOverModal({
   newBadges,
   newTrophies,
   daily,
+  challenge,
+  challengeSeed,
+  challengeMaxLevel,
+  playerName,
+  allowFriendChallenge,
   onPlayAgain,
+  onRematch,
   onMenu,
 }: GameOverModalProps) {
   const [shareToast, setShareToast] = useState(false);
+  const shareFriendChallenge = async () => {
+    const code = createChallengeCode({
+      seed: challengeSeed,
+      score,
+      maxLevel: challengeMaxLevel,
+      name: playerName,
+    });
+    const url = new URL(window.location.href);
+    url.search = "";
+    url.searchParams.set("c", code);
+    const link = url.toString();
+    const text = GAME_UI.friendChallenge.shareText(score, link);
+    try {
+      if (navigator.share) await navigator.share({ title: GAME_UI.friendChallenge.button, text });
+      else {
+        await navigator.clipboard.writeText(text);
+        setShareToast(true);
+        window.setTimeout(() => setShareToast(false), 2200);
+      }
+    } catch { /* share sheet dismissed or clipboard unavailable */ }
+  };
   const shareDaily = async () => {
     if (!daily) return;
     const dayNo = daily.dayKey.replaceAll("-", "");
@@ -68,10 +102,16 @@ export function GameOverModal({
       >
         <p className="m-0 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#FF7A7D]">{GAME_UI.gameOver}</p>
         <h2 className="m-0 mt-1 font-display text-[26px] leading-tight tracking-tight text-white">
-          {cheerLine(score)}
+          {challenge ? (score > challenge.score ? GAME_UI.friendChallenge.won : GAME_UI.friendChallenge.lost) : cheerLine(score)}
         </h2>
 
-        {isNewBest && (
+        {challenge && (
+          <p className="m-0 mt-2 text-sm font-bold text-[#E3E7F5]">
+            {GAME_UI.friendChallenge.difference(Math.abs(score - challenge.score))} · {GAME_UI.friendChallenge.target(challenge.score)}
+          </p>
+        )}
+
+        {!challenge && isNewBest && (
           <p className="mx-auto mt-3 w-fit rounded-full bg-[#FFC93C]/15 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] text-[#FFC93C] ring-1 ring-[#FFC93C]/40">
             {GAME_UI.newRecord}
           </p>
@@ -122,7 +162,7 @@ export function GameOverModal({
           </div>
         )}
 
-        {newTrophies && newTrophies.length > 0 && (
+        {!challenge && newTrophies && newTrophies.length > 0 && (
           <div className="mt-3">
             <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
               {GAME_UI.newTrophies}
@@ -153,7 +193,7 @@ export function GameOverModal({
           </div>
         )}
 
-        {newBadges.length > 0 && (
+        {!challenge && newBadges.length > 0 && (
           <div className="mt-3">
             <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#FFC93C]">
               {GAME_UI.newBadges}
@@ -181,7 +221,7 @@ export function GameOverModal({
           </div>
         )}
 
-        {top.length > 0 && (
+        {!challenge && top.length > 0 && (
           <div className="mt-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
             <p className="m-0 text-left text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#9FB0E8]">
               {GAME_UI.topScores}
@@ -212,14 +252,39 @@ export function GameOverModal({
         )}
 
         <div className="mt-5 flex flex-col gap-2">
-          <button
-            type="button"
-            onClick={onPlayAgain}
-            autoFocus
-            className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
-          >
-            {GAME_UI.playAgain}
-          </button>
+          {challenge ? (
+            <>
+              <button type="button" onClick={() => onRematch(challenge)} className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px]">
+                {GAME_UI.friendChallenge.rematch}
+              </button>
+              <button type="button" onClick={shareFriendChallenge} className="min-h-[48px] rounded-2xl bg-[#2EC4B6]/15 px-5 py-2.5 text-[14px] font-extrabold text-[#67e4d5] ring-1 ring-[#2EC4B6]/40">
+                {GAME_UI.friendChallenge.challengeOthers}
+              </button>
+            </>
+          ) : allowFriendChallenge ? (
+            <>
+              <button type="button" onClick={shareFriendChallenge} className="min-h-[48px] rounded-2xl bg-[#2EC4B6]/15 px-5 py-2.5 text-[14px] font-extrabold text-[#67e4d5] ring-1 ring-[#2EC4B6]/40">
+                {GAME_UI.friendChallenge.button}
+              </button>
+              <button
+                type="button"
+                onClick={onPlayAgain}
+                autoFocus
+                className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
+              >
+                {GAME_UI.playAgain}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={onPlayAgain}
+              autoFocus
+              className="min-h-[56px] rounded-2xl bg-[#FFC93C] px-5 py-3 font-display tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] transition hover:bg-[#FFD76A] active:translate-y-[2px] active:shadow-[0_2px_0_#D9A406]"
+            >
+              {GAME_UI.playAgain}
+            </button>
+          )}
           <button
             type="button"
             onClick={onMenu}
@@ -228,6 +293,7 @@ export function GameOverModal({
             {GAME_UI.mainMenu}
           </button>
         </div>
+        {shareToast && <p role="status" className="m-0 mt-2 text-xs text-white/85">{GAME_UI.friendChallenge.copied}</p>}
         <p className="m-0 mt-3 text-[12.5px] font-semibold text-[#9FB0E8]">
           {GAME_UI.restartTip}
         </p>

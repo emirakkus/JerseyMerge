@@ -13,6 +13,7 @@ import {
   DANGER_Y,
   DROP_COOLDOWN_MS,
   DROP_Y,
+  HIGH_SCORE_DIFFICULTY,
   JOKER_RADIUS,
   JOKER_VALUE,
   STEP_MS,
@@ -69,7 +70,7 @@ export interface EngineCallbacks {
   onGameEvent: (event: GameEvent) => void;
 }
 
-export type GameMode = "classic" | "daily";
+export type GameMode = "classic" | "daily" | "challenge";
 
 interface SnapshotJersey {
   value: number;
@@ -229,7 +230,9 @@ export class JerseyEngine {
   // ---------------------------------------------------------------- control
 
   /** Starts a fresh classic game (also used for instant restart). */
-  start(bonus?: Partial<PowerupInventory>): void {
+  start(bonus?: Partial<PowerupInventory>, seed?: number): void {
+    const runSeed = seed ?? (Math.floor(Math.random() * 0x1_0000_0000) >>> 0);
+    this.spawnRng = mulberry32(runSeed ^ 0x9e3779b9);
     this.beginRun("classic", Math.random, bonus);
   }
 
@@ -240,6 +243,11 @@ export class JerseyEngine {
   startDaily(seed: number, bonus?: Partial<PowerupInventory>): void {
     this.spawnRng = mulberry32(seed ^ 0x9e3779b9);
     this.beginRun("daily", mulberry32(seed), bonus);
+  }
+
+  startChallenge(seed: number): void {
+    this.spawnRng = mulberry32(seed ^ 0x9e3779b9);
+    this.beginRun("challenge", mulberry32(seed));
   }
 
   private beginRun(mode: GameMode, rng: Rng, bonus?: Partial<PowerupInventory>): void {
@@ -265,9 +273,11 @@ export class JerseyEngine {
     this.badges = new BadgeTracker(loadOwnedBadges());
     this.badges.push((_earned, all) => this.callbacks.onBadges(all));
     this.breachWarned = false;
-    this.powerups = bonus
-      ? { joker: Math.min(3, bonus.joker ?? 0), bomb: Math.min(3, bonus.bomb ?? 0), scramble: Math.min(3, bonus.scramble ?? 0), undo: initialInventory().undo }
-      : initialInventory();
+    this.powerups = mode === "challenge"
+      ? { joker: 0, bomb: 0, scramble: 0, undo: 0 }
+      : bonus
+        ? { joker: Math.min(3, bonus.joker ?? 0), bomb: Math.min(3, bonus.bomb ?? 0), scramble: Math.min(3, bonus.scramble ?? 0), undo: initialInventory().undo }
+        : initialInventory();
     this.used = emptyUsed();
     this.canUndo = false;
     this.snapshot = null;
@@ -276,9 +286,9 @@ export class JerseyEngine {
     this.bestCombo = 0;
     this.pendingJoker = null;
     this.pendingBomb = null;
-    this.nextValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng);
-    this.upcomingValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng);
-    this.followingValue = mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng, this.score);
+    this.nextValue = this.nextDailySpawn();
+    this.upcomingValue = this.nextDailySpawn();
+    this.followingValue = this.nextDailySpawn();
     this.status = "playing";
     sfx.unlock();
     sfx.ui();
@@ -362,7 +372,7 @@ export class JerseyEngine {
     this.emitEvent({ type: "drop" });
     this.nextValue = this.upcomingValue;
     this.upcomingValue = this.followingValue;
-    this.followingValue = this.mode === "daily" ? this.nextDailySpawn() : randomSpawnValue(this.rng, this.score);
+    this.followingValue = this.nextDailySpawn();
     this.callbacks.onNext(this.nextValue);
     this.callbacks.onUpcoming(this.upcomingValue);
     this.callbacks.onFollowing(this.followingValue);
@@ -370,17 +380,19 @@ export class JerseyEngine {
 
   /** Drops the joker form: merges with the first jersey it touches. */
   dropJoker(): void {
+    if (this.mode === "challenge") return;
     this.spawnPowerupDrop("joker", JOKER_VALUE, JOKER_RADIUS);
   }
 
   /** Drops the bomb: clears every form inside its blast radius. */
   dropBomb(): void {
+    if (this.mode === "challenge") return;
     this.spawnPowerupDrop("bomb", BOMB_VALUE, BOMB_RADIUS);
   }
 
   /** Instantly shuffles the pile with a light physics burst. */
   scramblePile(): void {
-    if (this.status !== "playing") return;
+    if (this.status !== "playing" || this.mode === "challenge") return;
     if (this.used.scramble >= 2) return;
     const inv = consumeCharge(this.powerups, "scramble");
     if (!inv) return;
@@ -402,7 +414,7 @@ export class JerseyEngine {
 
   /** Restores the world captured before the last jersey drop. */
   undoDrop(): void {
-    if (this.status !== "playing") return;
+    if (this.status !== "playing" || this.mode === "challenge") return;
     if (this.powerups.undo <= 0 || this.used.undo >= 1 || !this.snapshot || !this.canUndo) return;
     const snap = this.snapshot;
     this.powerups = { ...snap.powerups, undo: snap.powerups.undo - 1 };
@@ -457,7 +469,7 @@ export class JerseyEngine {
   }
 
   private spawnPowerupDrop(id: "joker" | "bomb", value: number, radius: number): void {
-    if (this.status !== "playing") return;
+    if (this.status !== "playing" || this.mode === "challenge") return;
     const now = performance.now();
     if (now - this.lastDropAt < DROP_COOLDOWN_MS) return;
     const cap = POWERUPS.find((p) => p.id === id)?.max ?? 2;
@@ -508,7 +520,9 @@ export class JerseyEngine {
   /** Daily weighted bag prevents long streaks of the same spawn level. */
   private nextDailySpawn(): number {
     if (this.dailyBagIndex >= this.dailyBag.length) {
-      this.dailyBag = [2, 2, 2, 2, 4, 4, 8, 16];
+      this.dailyBag = HIGH_SCORE_DIFFICULTY.enabled && this.score >= HIGH_SCORE_DIFFICULTY.scoreThreshold
+        ? [2, 2, 4, 4, 4, 4, 8, 16]
+        : [2, 2, 2, 2, 4, 4, 8, 16];
       for (let i = this.dailyBag.length - 1; i > 0; i -= 1) {
         const j = Math.floor(this.spawnRng() * (i + 1));
         [this.dailyBag[i], this.dailyBag[j]] = [this.dailyBag[j], this.dailyBag[i]];
@@ -691,8 +705,10 @@ export class JerseyEngine {
     this.addScore(gain + bonus);
     this.missions.onMerge(value, this.comboCount);
     if (this.missions.completed.length > 0) this.settleMissions();
-    this.badges.onMerge(value, this.comboCount);
-    if (this.badges.earned.length > 0) this.settleBadges();
+    if (this.mode !== "challenge") {
+      this.badges.onMerge(value, this.comboCount);
+      if (this.badges.earned.length > 0) this.settleBadges();
+    }
 
     const theme = themeFor(value);
     const colors = [theme.primary, theme.secondary, "#ffffff"];
@@ -727,11 +743,13 @@ export class JerseyEngine {
       this.fx.flash(x, y, r * 1.7, "#fff3b0", 340);
       this.shakeFx(8);
     }
-    for (const cfg of POWERUPS) {
-      if (cfg.earnAt && value >= cfg.earnAt && this.powerups[cfg.id] < cfg.max) {
-        this.powerups = applyEarn(this.powerups, cfg.id);
-        const slot = jokerUsed ? 98 : this.comboCount >= 2 ? 78 : 58;
-        this.fx.floater(x, y - r - slot, GAME_UI.powerupEarned(GAME_UI.powerupNames[cfg.id]), "#fff3b0", 14);
+    if (this.mode !== "challenge") {
+      for (const cfg of POWERUPS) {
+        if (cfg.earnAt && value >= cfg.earnAt && this.powerups[cfg.id] < cfg.max) {
+          this.powerups = applyEarn(this.powerups, cfg.id);
+          const slot = jokerUsed ? 98 : this.comboCount >= 2 ? 78 : 58;
+          this.fx.floater(x, y - r - slot, GAME_UI.powerupEarned(GAME_UI.powerupNames[cfg.id]), "#fff3b0", 14);
+        }
       }
     }
     this.shakeFx(1.5 + Math.min(8, value / 48));
@@ -744,10 +762,10 @@ export class JerseyEngine {
 
   /** Adds points, keeps the live best in sync and celebrates records / level-ups. */
   private addScore(amount: number): void {
-    const crossedBest = this.best > 0 && this.score + amount > this.best;
+    const crossedBest = this.mode !== "challenge" && this.best > 0 && this.score + amount > this.best;
     const levelBefore = levelFor(this.score);
     this.score += amount;
-    if (this.score > this.best) {
+    if (this.mode !== "challenge" && this.score > this.best) {
       this.best = this.score;
       saveBest(this.best);
     }
@@ -756,7 +774,7 @@ export class JerseyEngine {
       this.fx.floater(BOARD_W / 2, 130, GAME_UI.newBest, "#ffd24a", 22);
       sfx.newBest();
     }
-    this.badges.onScore(this.score);
+    if (this.mode !== "challenge") this.badges.onScore(this.score);
     const levelAfter = levelFor(this.score);
     if (levelAfter.name !== levelBefore.name) {
       this.fx.floater(BOARD_W / 2, 200, GAME_UI.levelUp, "#ffffff", 21);

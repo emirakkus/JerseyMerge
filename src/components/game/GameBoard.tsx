@@ -8,7 +8,7 @@ import type { PowerupSnapshot } from "@/lib/game/powerups";
 import { sfx } from "@/lib/game/sfx";
 
 export interface GameHandle {
-  start: (bonus?: Partial<PowerupSnapshot["inventory"]>) => void;
+  start: (bonus?: Partial<PowerupSnapshot["inventory"]>, seed?: number) => void;
   pause: () => void;
   resume: () => void;
   togglePause: () => void;
@@ -20,6 +20,7 @@ export interface GameHandle {
   scramblePile: () => void;
   undoDrop: () => void;
   startDaily: (seed: number, bonus?: Partial<PowerupSnapshot["inventory"]>) => void;
+  startChallenge: (seed: number) => void;
 }
 
 interface GameBoardProps {
@@ -80,7 +81,7 @@ export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, o
     ro.observe(wrap);
 
     gameRef.current = {
-      start: (bonus) => engine.start(bonus),
+      start: (bonus, seed) => engine.start(bonus, seed),
       pause: () => engine.pause(),
       resume: () => engine.resume(),
       togglePause: () => engine.togglePause(),
@@ -92,6 +93,7 @@ export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, o
       scramblePile: () => engine.scramblePile(),
       undoDrop: () => engine.undoDrop(),
       startDaily: (seed, bonus) => engine.startDaily(seed, bonus),
+      startChallenge: (seed) => engine.startChallenge(seed),
     };
 
     const onKey = (e: KeyboardEvent): void => {

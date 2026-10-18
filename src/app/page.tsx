@@ -69,6 +69,7 @@ import { GAME_UI } from "@/lib/i18n";
 import { JerseySprite } from "@/components/game/JerseySprite";
 import { EvolutionStrip } from "@/components/game/EvolutionStrip";
 import { loadHapticsEnabled, setHapticsEnabled } from "@/lib/game/haptics";
+import { decodeChallengeCode, randomChallengeSeed, type FriendChallenge } from "@/lib/game/friendChallenge";
 
 interface MeResponse {
   user: ApiUser;
@@ -104,8 +105,8 @@ export default function HomePage() {
   }));
   const [combo, setCombo] = useState<ComboEvent | null>(null);
   const comboDeadline = useRef(0);
-  const [mode, setMode] = useState<"classic" | "daily">("classic");
-  const modeRef = useRef<"classic" | "daily">("classic");
+  const [mode, setMode] = useState<"classic" | "daily" | "challenge">("classic");
+  const modeRef = useRef<"classic" | "daily" | "challenge">("classic");
   const [dayKey, setDayKey] = useState("");
   const [dailyPlayedScore, setDailyPlayedScore] = useState<number | null>(null);
   const [questCounters, setQuestCounters] = useState<QuestCounters>(emptyCounters);
@@ -119,7 +120,10 @@ export default function HomePage() {
     dailyBest: number | null;
   } | null>(null);
   const [dailyResult, setDailyResult] = useState<DailyResultInfo | null>(null);
+  const [challengeInvite, setChallengeInvite] = useState<FriendChallenge | null>(null);
+  const [activeChallenge, setActiveChallenge] = useState<FriendChallenge | null>(null);
   const runMaxValue = useRef(2);
+  const runSeed = useRef(0);
   const [streak, setStreak] = useState(0);
   const trackerRef = useRef<DailyQuestTracker | null>(null);
   // Keep SSR and the first browser render identical; restore local progress after hydration.
@@ -148,6 +152,16 @@ export default function HomePage() {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
+  }, []);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("c");
+    if (!code) return;
+    const challenge = decodeChallengeCode(code);
+    if (challenge) setChallengeInvite(challenge);
+    url.searchParams.delete("c");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   }, []);
 
   const refreshGlobal = useCallback(() => {
@@ -245,7 +259,7 @@ export default function HomePage() {
   const handleDanger = useCallback((d: boolean) => setDanger(d), []);
   const handlePowerups = useCallback((p: PowerupSnapshot) => {
     setPowerups(p);
-    if (status === "playing" || status === "over") {
+    if (modeRef.current !== "challenge" && (status === "playing" || status === "over")) {
       const stock = saveBank({ joker: p.inventory.joker, bomb: p.inventory.bomb, scramble: p.inventory.scramble });
       if (user) api("/api/powerups", { method: "PUT", body: JSON.stringify({ stock }) }).catch(() => {});
     }
@@ -270,6 +284,13 @@ export default function HomePage() {
   }, [combo]);
 
   const loadDailyState = useCallback(() => {
+    const localDayKey = utcDayKey();
+    // Restore this browser's completion independently of the account/leaderboard API.
+    // A database outage must not make a finished local daily run look unplayed.
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("jersey-merge.daily-played") ?? "null") as { dayKey?: string; score?: number } | null;
+      setDailyPlayedScore(saved?.dayKey === localDayKey && typeof saved.score === "number" ? saved.score : null);
+    } catch { setDailyPlayedScore(null); }
     api<DailyStateResponse>("/api/daily/state")
       .then((data) => {
         setDayKey(data.dayKey);
@@ -334,6 +355,13 @@ export default function HomePage() {
 
   const handleGameEvent = useCallback(
     (e: GameEvent) => {
+      if (modeRef.current === "challenge") {
+        if (e.type === "merge") {
+          runMaxValue.current = Math.max(runMaxValue.current, e.value);
+          setHighestReached((current) => Math.max(current, e.value));
+        }
+        return;
+      }
       if (e.type === "merge") {
         runMaxValue.current = Math.max(runMaxValue.current, e.value);
         setHighestReached((current) => Math.max(current, e.value));
@@ -417,6 +445,7 @@ export default function HomePage() {
 
       const totalUsed = Object.values(powerups.used).reduce((a, b) => a + b, 0);
       const isDaily = modeRef.current === "daily";
+      const isChallenge = modeRef.current === "challenge";
       if (isDaily) {
         // Daily challenge: guests play but are not recorded.
         const dk = dayKey || utcDayKey();
@@ -447,7 +476,7 @@ export default function HomePage() {
           setDailyResult({ dayKey: dk, isGuest: true, maxValue: runMaxValue.current, streak });
         }
       }
-      if (!isDaily && user) {
+      if (!isDaily && !isChallenge && user) {
         // Signed in: persist the run (score, time, power-ups, combo) to the account.
         api<{ best: number; isNewBest: boolean; top: ScoreEntry[] }>("/api/scores", {
           method: "POST",
@@ -476,7 +505,7 @@ export default function HomePage() {
             });
         }
         refreshGlobal();
-      } else {
+      } else if (!isDaily && !isChallenge) {
         // Guest: keep progress (incl. power-up stats) in this browser.
         const local = recordScore(s, timeMs, "Player");
         addLifetimeStats(totalUsed, powerups.bestCombo);
@@ -486,7 +515,7 @@ export default function HomePage() {
       }
       // Match XP (score + combo bonus + daily bonus) on top of achievement XP.
       const pt = progressTrackerRef.current;
-      if (pt) {
+      if (pt && !isChallenge) {
         pt.addXp(computeMatchXp({ score: s, maxCombo: pt.state.counters.maxCombo, isDaily: isDaily }));
         persistProgress();
       }
@@ -497,17 +526,24 @@ export default function HomePage() {
   );
 
   const beginRun = useCallback(
-    (runMode: "classic" | "daily", seed?: number) => {
+    (runMode: "classic" | "daily" | "challenge", seed?: number, challenge?: FriendChallenge) => {
       sfx.unlock();
+      const seedForRun = seed ?? randomChallengeSeed();
+      runSeed.current = seedForRun;
+      modeRef.current = runMode;
       runMaxValue.current = 2;
       setHighestReached(2);
       const bonus = loadBank();
-      if (runMode === "daily" && seed !== undefined) {
-        gameRef.current?.startDaily(seed, bonus);
+      setActiveChallenge(runMode === "challenge" ? challenge ?? null : null);
+      setChallengeInvite(null);
+      setIsNewBest(false);
+      if (runMode === "daily") {
+        gameRef.current?.startDaily(seedForRun, bonus);
+      } else if (runMode === "challenge") {
+        gameRef.current?.startChallenge(seedForRun);
       } else {
-        gameRef.current?.start(bonus);
+        gameRef.current?.start(bonus, seedForRun);
       }
-      modeRef.current = runMode;
       setMode(runMode);
       setBadgesAtRunStart(badges);
       setDanger(false);
@@ -521,6 +557,10 @@ export default function HomePage() {
   );
 
   const startGame = useCallback(() => beginRun("classic"), [beginRun]);
+
+  const startChallenge = useCallback((challenge: FriendChallenge) => {
+    beginRun("challenge", challenge.seed, challenge);
+  }, [beginRun]);
 
   const startDaily = useCallback(() => {
     if (dailyMeta) beginRun("daily", dailyMeta.seed);
@@ -657,7 +697,7 @@ export default function HomePage() {
           <button className="game-menu-button" type="button" onClick={() => status === "over" ? goMenu() : togglePause()} aria-label={status === "playing" ? GAME_UI.pause : status === "paused" ? GAME_UI.resume : GAME_UI.mainMenu}>
             {status === "over" ? <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg> : <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4v12M13 4v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>}
           </button>
-          <GameHUD score={score} best={best} />
+          <GameHUD score={score} best={best} targetScore={mode === "challenge" ? activeChallenge?.score : undefined} />
           <button className="game-feedback-button" type="button" onClick={toggleFeedback}
             aria-label={muted && !hapticsEnabled ? GAME_UI.feedbackEnabled : GAME_UI.feedbackDisabled}
             aria-pressed={!muted || hapticsEnabled}
@@ -834,7 +874,22 @@ export default function HomePage() {
                 </span>
               </div>
             )}
-            {status === "idle" && (
+            {status === "idle" && challengeInvite && (
+              <div className="absolute inset-0 z-20 grid place-items-center bg-[#0B1229]/85 p-5 backdrop-blur-sm">
+                <section role="dialog" aria-modal="true" aria-label={GAME_UI.friendChallenge.button} className="w-full max-w-[360px] rounded-3xl bg-[#16204A] p-6 text-center text-white shadow-2xl ring-1 ring-white/15">
+                  <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#2EC4B6]">{GAME_UI.title}</p>
+                  <h2 className="m-0 mt-3 font-display text-2xl leading-tight">{GAME_UI.friendChallenge.invite(challengeInvite.name, challengeInvite.score)}</h2>
+                  <p className="m-0 mt-3 text-sm font-bold text-[#C7CCEA]">{GAME_UI.friendChallenge.highest(challengeInvite.maxLevel)}</p>
+                  <button type="button" autoFocus onClick={() => startChallenge(challengeInvite)} className="mt-6 min-h-[58px] w-full rounded-2xl bg-[#FFC93C] px-5 py-3 font-display text-lg tracking-wide text-[#0F1B3D] shadow-[0_4px_0_#D9A406] active:translate-y-[2px]">
+                    {GAME_UI.friendChallenge.accept}
+                  </button>
+                  <button type="button" onClick={() => setChallengeInvite(null)} className="mt-2 min-h-[44px] w-full rounded-xl px-4 py-2 text-sm font-bold text-[#D6DDF1] hover:text-white">
+                    {GAME_UI.friendChallenge.dismiss}
+                  </button>
+                </section>
+              </div>
+            )}
+            {status === "idle" && !challengeInvite && (
               <MainMenu
                 best={best}
                 top={top}
@@ -882,7 +937,13 @@ export default function HomePage() {
                 newBadges={newBadges}
                 newTrophies={sessionTrophies}
                 daily={dailyResult}
+                challenge={mode === "challenge" ? activeChallenge : null}
+                challengeSeed={runSeed.current}
+                challengeMaxLevel={runMaxValue.current}
+                playerName={user?.username ?? GAME_UI.friendChallenge.guestName}
+                allowFriendChallenge={mode !== "daily"}
                 onPlayAgain={startGame}
+                onRematch={startChallenge}
                 onMenu={goMenu}
               />
             )}
@@ -893,6 +954,7 @@ export default function HomePage() {
             <PowerupBar
               snapshot={powerups}
               canPlay={status === "playing"}
+              disabledReason={mode === "challenge" ? GAME_UI.friendChallenge.powerupsOff : undefined}
               onUse={usePowerup}
             />
 

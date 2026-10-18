@@ -8,6 +8,7 @@ interface PowerupBarProps {
   snapshot: PowerupSnapshot;
   canPlay: boolean;
   onUse: (id: PowerupId) => void;
+  disabledReason?: string;
 }
 
 const ACTIVE_RING: Record<PowerupId, string> = {
@@ -70,7 +71,7 @@ function PowerupIcon({ id }: { id: string }) {
 }
 
 /** Compact icon-only power-up row with touch sized targets. */
-export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
+export function PowerupBar({ snapshot, canPlay, onUse, disabledReason }: PowerupBarProps) {
   const [bombArmed, setBombArmed] = useState(false);
   const [touchHelp, setTouchHelp] = useState<PowerupId | null>(null);
   const bombTimer = useRef<number | null>(null);
@@ -84,7 +85,7 @@ export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
       <div className="powerup-grid" role="group" aria-label={GAME_UI.powerups}>
         {POWERUPS.map((p) => {
           const count = snapshot.inventory[p.id];
-          const disabled = !canPlay || count <= 0 || snapshot.used[p.id] >= p.max || (p.id === "undo" && !snapshot.canUndo);
+          const disabled = Boolean(disabledReason) || !canPlay || count <= 0 || snapshot.used[p.id] >= p.max || (p.id === "undo" && !snapshot.canUndo);
           const active = !disabled;
           const name = GAME_UI.powerupNames[p.id];
           return (
@@ -103,7 +104,8 @@ export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
                 }
               }}
               disabled={disabled}
-              data-tooltip={`${name} · ${p.key} — ${GAME_UI.powerupHelp[p.id]}`}
+              data-tooltip={disabledReason ?? `${name} · ${p.key} — ${GAME_UI.powerupHelp[p.id]}`}
+              title={disabledReason}
               data-touch-help={touchHelp === p.id ? "true" : undefined}
               onPointerDown={(event) => {
                 if (event.pointerType !== "touch") return;
@@ -120,7 +122,7 @@ export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
                 setTouchHelp(null);
               }}
               onContextMenu={(event) => event.preventDefault()}
-              aria-label={bombArmed && p.id === "bomb" ? GAME_UI.confirmBomb : `${name}, ${GAME_UI.powerupCount(count)}. ${GAME_UI.powerupHelp[p.id]}`}
+              aria-label={disabledReason ? `${name}. ${disabledReason}` : bombArmed && p.id === "bomb" ? GAME_UI.confirmBomb : `${name}, ${GAME_UI.powerupCount(count)}. ${GAME_UI.powerupHelp[p.id]}`}
               className={`powerup-button ${active ? `is-available ${ACTIVE_RING[p.id]}` : "is-empty"}`}
             >
               <PowerupIcon id={p.id} />
@@ -129,6 +131,7 @@ export function PowerupBar({ snapshot, canPlay, onUse }: PowerupBarProps) {
           );
         })}
       </div>
+      {disabledReason && <p className="m-0 mt-1 text-center text-[9px] font-bold text-[#D4DCF3]">{disabledReason}</p>}
     </div>
   );
 }

@@ -55,12 +55,15 @@ psql "postgresql://postgres:postgres@127.0.0.1:5432/app_db" -c "\dt"
 
 ---
 
-## 3. adım — `.env` dosyası (URL buraya)
+## 3. adım — `.env` dosyası (Neon URL'si ve Google OAuth)
 
-Proje kökünde **`.env`** dosyası oluştur (yoksa "DATABASE_URL is missing" hatası alınır):
+Proje kökündeki `.env.example` dosyasını `.env` olarak kopyalayın ve değerleri doldurun. `.env` Git tarafından yok sayılır; bu dosyayı commit etmeyin.
 
 ```env
-DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/app_db
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DB_NAME?sslmode=require
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 ```
 
 Kuralları:
@@ -69,6 +72,11 @@ Kuralları:
 - Özel host'ta parola içinde `@ % /` varsa URL-encode edin (`@` → `%40`).
 - Bulut (Neon) için: `?sslmode=require` sonunu koruyun.
 - `.env` asla commit'lenmemeli (`.gitignore`'da olmalı).
+
+Windows PowerShell'de şablonu kopyalamak için: `Copy-Item .env.example .env`.
+Neon panelinden **pooled connection string**'i `DATABASE_URL` olarak kullanın.
+
+Google ile giriş için Google Cloud Console'da bir OAuth istemcisi (Web application) oluşturun. Authorized redirect URI alanına tam olarak `http://localhost:3000/api/auth/google/callback` ekleyin; canlı alan adınız varsa onun `/api/auth/google/callback` adresini de ekleyin. Client ID ve Client Secret değerlerini `.env`'deki Google alanlarına girin. `GOOGLE_REDIRECT_URI`, Google Console'daki adresle birebir aynı olmalı.
 
 ---
 
@@ -105,7 +113,10 @@ npm run dev
 # ayrı terminalde:
 curl http://localhost:3000/api/health
 # { "ok": true, "db": true, "dbLatencyMs": 5, "databaseUrl": "set" }
+curl http://localhost:3000/api/auth/config
+# Google OAuth yapılandırıldıysa: { "google": true }
 ```
+`.env` değerlerini değiştirdikten sonra geliştirme sunucusunu yeniden başlatın. `databaseUrl: "set"` tek başına bağlantıyı doğrulamaz; sağlık kontrolünde `ok: true` görülmeli. Google düğmesi, OAuth yapılandırılınca giriş penceresinde görünür.
 Tarayıcıda hesap oluştur → giriş → skor gönder; sonra:
 ```bash
 psql "$DATABASE_URL" -c "select username, best_score from users;"

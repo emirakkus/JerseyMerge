@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   best_at timestamptz NOT NULL DEFAULT now(),
   last_active_day text,
   streak integer NOT NULL DEFAULT 0,
+  powerup_inventory jsonb NOT NULL DEFAULT '{"joker":1,"bomb":1,"scramble":1}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users (username);
@@ -24,6 +25,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users (username);
 -- Eski kurulumlarda eklenmemiş olabilir:
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_day text;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS streak integer NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS powerup_inventory jsonb NOT NULL DEFAULT '{"joker":1,"bomb":1,"scramble":1}'::jsonb;
 
 CREATE TABLE IF NOT EXISTS sessions (
   token text PRIMARY KEY,

@@ -53,7 +53,7 @@ export const MAX_RADIUS = 124;
 export const HIGH_SCORE_DIFFICULTY = {
   enabled: false,
   scoreThreshold: 5000,
-  firstLevelChance: 0.28,
+  firstLevelChance: 0.25,
 } as const;
 
 /** Wild form identities (negative values never merge via the queue). */
