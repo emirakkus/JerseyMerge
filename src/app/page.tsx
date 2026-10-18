@@ -70,6 +70,7 @@ import { JerseySprite } from "@/components/game/JerseySprite";
 import { EvolutionStrip } from "@/components/game/EvolutionStrip";
 import { loadHapticsEnabled, setHapticsEnabled } from "@/lib/game/haptics";
 import { decodeChallengeCode, randomChallengeSeed, type FriendChallenge } from "@/lib/game/friendChallenge";
+import { FIELD_THEMES, resolveFieldTheme, unlockedFieldThemes, type FieldThemeId } from "@/lib/game/fieldThemes";
 
 interface MeResponse {
   user: ApiUser;
@@ -131,9 +132,11 @@ export default function HomePage() {
   const [progressOpen, setProgressOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [toast, setToast] = useState<{ key: number; name: string; xp: number } | null>(null);
+  const [fieldToast, setFieldToast] = useState("");
   const [sessionTrophies, setSessionTrophies] = useState<string[]>([]);
   const progressTrackerRef = useRef<ProgressTracker | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const fieldToastTimer = useRef<number | null>(null);
   const [user, setUser] = useState<ApiUser | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
@@ -348,10 +351,26 @@ export default function HomePage() {
     (remote?: ProgressDto) => {
       const t = progressTrackerRef.current;
       if (!t) return;
+      const previousUnlocks = t.state.unlockedFieldThemes ?? ["classic"];
       // "Most advanced wins": merge incoming cloud state before storing.
       if (remote) t.state = mergeProgress(t.state, remote);
+      const currentLevel = levelForXp(t.state.xp).level;
+      const unlocked = unlockedFieldThemes(currentLevel).map((theme) => theme.id);
+      const newlyUnlocked = unlocked.filter((id) => !previousUnlocks.includes(id));
+      t.state.unlockedFieldThemes = Array.from(new Set([...previousUnlocks, ...unlocked]));
+      t.state.seenFieldThemes = (t.state.seenFieldThemes ?? ["classic"]).filter((id) => t.state.unlockedFieldThemes.includes(id));
+      if (!t.state.seenFieldThemes.includes("classic")) t.state.seenFieldThemes.push("classic");
+      if (!t.state.unlockedFieldThemes.includes(t.state.fieldThemeId)) t.state.fieldThemeId = "classic";
       saveProgress(t.state);
-      setProgress({ xp: t.state.xp, counters: { ...t.state.counters }, achievements: [...t.state.achievements], skins: [...t.state.skins] });
+      setProgress({ ...t.state, counters: { ...t.state.counters }, achievements: [...t.state.achievements], skins: [...t.state.skins], unlockedFieldThemes: [...t.state.unlockedFieldThemes], seenFieldThemes: [...t.state.seenFieldThemes] });
+      if (newlyUnlocked.length > 0) {
+        const newest = FIELD_THEMES.find((theme) => theme.id === newlyUnlocked[newlyUnlocked.length - 1]);
+        if (newest) {
+          setFieldToast(GAME_UI.fieldThemes.newlyUnlocked(newest.name));
+          if (fieldToastTimer.current !== null) window.clearTimeout(fieldToastTimer.current);
+          fieldToastTimer.current = window.setTimeout(() => setFieldToast(""), 3600);
+        }
+      }
       if (user) {
         api<ProgressSyncResult>("/api/progress", { method: "POST", body: JSON.stringify(t.state) }).catch(
           () => {
@@ -362,6 +381,25 @@ export default function HomePage() {
     },
     [user]
   );
+
+  const selectFieldTheme = useCallback((id: FieldThemeId) => {
+    const tracker = progressTrackerRef.current;
+    if (!tracker) return;
+    const level = levelForXp(tracker.state.xp).level;
+    const theme = resolveFieldTheme(id, level);
+    tracker.state.fieldThemeId = theme.id;
+    tracker.state.unlockedFieldThemes = unlockedFieldThemes(level).map((entry) => entry.id);
+    tracker.state.seenFieldThemes = Array.from(new Set([...(tracker.state.seenFieldThemes ?? ["classic"]), theme.id]));
+    persistProgress();
+  }, [persistProgress]);
+
+  const showLockedThemeToast = useCallback((name: string) => {
+    const theme = FIELD_THEMES.find((entry) => entry.name === name);
+    if (!theme) return;
+    setFieldToast(GAME_UI.fieldThemes.locked(theme.unlockLevel));
+    if (fieldToastTimer.current !== null) window.clearTimeout(fieldToastTimer.current);
+    fieldToastTimer.current = window.setTimeout(() => setFieldToast(""), 2200);
+  }, []);
 
   const handleGameEvent = useCallback(
     (e: GameEvent) => {
@@ -675,6 +713,7 @@ export default function HomePage() {
 
   const newBadges = badges.filter((b) => !badgesAtRunStart.includes(b));
   const lvlInfo = levelForXp(progress.xp);
+  const selectedFieldTheme = resolveFieldTheme(progress.fieldThemeId, lvlInfo.level);
   const mood: MascotMood =
     status === "paused"
       ? "sleep"
@@ -864,6 +903,7 @@ export default function HomePage() {
           <section className="layout-board">
           <GameBoard
             gameRef={gameRef}
+            fieldTheme={selectedFieldTheme}
             onScore={handleScore}
             onNext={handleNext}
             onUpcoming={handleUpcoming}
@@ -926,6 +966,11 @@ export default function HomePage() {
                 onPlay={startGame}
                 onPlayDaily={startDaily}
                 onClaimQuest={claimQuest}
+                playerLevel={lvlInfo.level}
+                selectedFieldTheme={selectedFieldTheme.id}
+                seenFieldThemes={progress.seenFieldThemes}
+                onSelectFieldTheme={selectFieldTheme}
+                onLockedFieldTheme={showLockedThemeToast}
               />
             )}
             {status === "paused" && <PauseOverlay
@@ -1020,6 +1065,7 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      {fieldToast && <div className="field-unlock-toast" role="status">{fieldToast}</div>}
     </>
   );
 }

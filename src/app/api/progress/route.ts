@@ -11,12 +11,15 @@ import type { ProgressDto, ProgressSyncResult } from "@/lib/progress/api";
 
 export const dynamic = "force-dynamic";
 
-function rowToDto(row: { xp: number; counters: unknown; achievements: unknown } | undefined): ProgressDto {
+function rowToDto(row: { xp: number; counters: unknown; achievements: unknown; fieldThemeId?: string; unlockedFieldThemes?: string[]; seenFieldThemes?: string[] } | undefined): ProgressDto {
   if (!row) return emptyProgress();
   return sanitizeProgress({
     xp: row.xp,
     counters: row.counters,
     achievements: row.achievements,
+    fieldThemeId: row.fieldThemeId,
+    unlockedFieldThemes: row.unlockedFieldThemes,
+    seenFieldThemes: row.seenFieldThemes,
   });
 }
 
@@ -59,12 +62,12 @@ export async function POST(req: Request) {
   if (rows[0]) {
     await db
       .update(playerProgress)
-      .set({ xp: merged.xp, counters: merged.counters, achievements: merged.achievements, updatedAt: now })
+      .set({ xp: merged.xp, counters: merged.counters, achievements: merged.achievements, fieldThemeId: merged.fieldThemeId, unlockedFieldThemes: merged.unlockedFieldThemes, seenFieldThemes: merged.seenFieldThemes, updatedAt: now })
       .where(eq(playerProgress.userId, user.id));
   } else {
     await db
       .insert(playerProgress)
-      .values({ userId: user.id, xp: merged.xp, counters: merged.counters, achievements: merged.achievements, updatedAt: now });
+      .values({ userId: user.id, xp: merged.xp, counters: merged.counters, achievements: merged.achievements, fieldThemeId: merged.fieldThemeId, unlockedFieldThemes: merged.unlockedFieldThemes, seenFieldThemes: merged.seenFieldThemes, updatedAt: now });
   }
 
   const result: ProgressSyncResult = { merged };

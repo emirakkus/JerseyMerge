@@ -6,6 +6,7 @@
 import { BOARD_H, BOARD_W, DANGER_Y, DROP_Y, bowlFloorY, radiusFor, styleFor } from "./constants";
 import { drawJerseyNumber, getJerseySprite } from "./jersey";
 import type { FxSystem } from "./fx";
+import { CLASSIC_FIELD_THEME, type FieldTheme } from "./fieldThemes";
 
 export interface RenderJersey {
   x: number;
@@ -24,13 +25,12 @@ export interface FrameState {
   dangerLevel: number;
   ts: number;
   reducedMotion: boolean;
+  fieldTheme: FieldTheme;
 }
 
-const BG_TOP = "#0F1B3D";
-const BG_BOTTOM = "#2A1B5C";
 const ACCENT_CORAL = "#FF5A5F";
 const JERSEY_ART_SCALE = 1.14;
-const backgroundGradients = new WeakMap<CanvasRenderingContext2D, CanvasGradient>();
+const backgroundGradients = new WeakMap<CanvasRenderingContext2D, Map<string, CanvasGradient>>();
 const dangerGradients = new WeakMap<CanvasRenderingContext2D, CanvasGradient>();
 
 export function drawFrame(
@@ -51,8 +51,8 @@ export function drawFrame(
   ctx.lineTo(BOARD_W, 0);
   ctx.closePath();
   ctx.clip();
-  drawBackground(ctx, state.dangerLevel);
-  if (state.showAim) drawAim(ctx, state.aimX, state.nextValue, state.jerseys);
+  drawBackground(ctx, state.dangerLevel, state.fieldTheme, state.ts, state.reducedMotion);
+  if (state.showAim) drawAim(ctx, state.aimX, state.nextValue, state.jerseys, state.fieldTheme);
   for (const j of state.jerseys) {
     drawJerseySprite(ctx, j, state.ts, state.reducedMotion);
   }
@@ -61,13 +61,18 @@ export function drawFrame(
   ctx.restore();
 }
 
-export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: number): void {
-  let g = backgroundGradients.get(ctx);
+export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: number, theme: FieldTheme = CLASSIC_FIELD_THEME, ts = 0, reducedMotion = false): void {
+  let gradients = backgroundGradients.get(ctx);
+  if (!gradients) {
+    gradients = new Map<string, CanvasGradient>();
+    backgroundGradients.set(ctx, gradients);
+  }
+  let g = gradients.get(theme.id);
   if (!g) {
     g = ctx.createLinearGradient(0, 0, 0, BOARD_H);
-    g.addColorStop(0, BG_TOP);
-    g.addColorStop(1, BG_BOTTOM);
-    backgroundGradients.set(ctx, g);
+    g.addColorStop(0, theme.backgroundTop);
+    g.addColorStop(1, theme.backgroundBottom);
+    gradients.set(theme.id, g);
   }
   ctx.fillStyle = g;
   ctx.fillRect(-20, -20, BOARD_W + 40, BOARD_H + 40);
@@ -77,7 +82,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   for (let i = 0; i < BOARD_W; i += 84) ctx.fillRect(i, 0, 42, BOARD_H);
 
   // stadium pitch lines
-  ctx.strokeStyle = "rgba(230,255,238,0.10)";
+  ctx.strokeStyle = theme.pitchColor;
+  ctx.globalAlpha = theme.pitchOpacity;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(0, BOARD_H * 0.52);
@@ -88,12 +94,13 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   ctx.stroke();
   ctx.strokeRect(BOARD_W * 0.24, 0, BOARD_W * 0.52, 92);
   ctx.strokeRect(BOARD_W * 0.36, 0, BOARD_W * 0.28, 42);
+  ctx.globalAlpha = 1;
 
   // danger line (coral, pulsing when in breach)
   ctx.save();
   ctx.setLineDash([12, 9]);
   const pulse = dangerLevel > 0.02 ? 0.62 + dangerLevel * 0.35 * (0.55 + 0.45 * Math.sin(performance.now() / 130)) : 0.42;
-  ctx.strokeStyle = ACCENT_CORAL;
+  ctx.strokeStyle = theme.dangerColor || ACCENT_CORAL;
   ctx.globalAlpha = pulse;
   ctx.lineWidth = dangerLevel > 0.02 ? 3.5 : 2;
   ctx.beginPath();
@@ -113,14 +120,23 @@ export function drawBackground(ctx: CanvasRenderingContext2D, dangerLevel: numbe
   ctx.lineTo(BOARD_W - 1.5, 1.5);
   ctx.closePath();
   ctx.stroke();
-  void ACCENT_CORAL;
+  if (reducedMotion || !theme.particleCount || theme.particles === "none") return;
+  drawWeather(ctx, theme, ts);
 }
 
-export function drawAim(ctx: CanvasRenderingContext2D, aimX: number, heldValue: number, jerseys: readonly RenderJersey[]): void {
+export function drawAim(ctx: CanvasRenderingContext2D, aimX: number, heldValue: number, jerseys: readonly RenderJersey[], theme: FieldTheme = CLASSIC_FIELD_THEME): void {
   const r = radiusFor(heldValue);
   const landingY = ghostLandingY(aimX, r, jerseys);
   drawJerseyIcon(ctx, aimX, DROP_Y, heldValue, r, 1);
-  drawJerseyIcon(ctx, aimX, landingY, heldValue, r, 0.48);
+  drawJerseyIcon(ctx, aimX, landingY, heldValue, r, theme.ghostFill);
+  ctx.save();
+  ctx.globalAlpha = 0.68;
+  ctx.strokeStyle = theme.ghostOutline;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(aimX, landingY, r * 0.94, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
   const x = aimX;
   ctx.save();
   ctx.setLineDash([4, 10]);
@@ -131,6 +147,31 @@ export function drawAim(ctx: CanvasRenderingContext2D, aimX: number, heldValue: 
   ctx.lineTo(x, landingY - r - 2);
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.restore();
+}
+
+const WEATHER_PARTICLE_CAP = 40;
+function drawWeather(ctx: CanvasRenderingContext2D, theme: FieldTheme, ts: number): void {
+  const count = Math.min(WEATHER_PARTICLE_CAP, theme.particleCount);
+  ctx.save();
+  ctx.globalAlpha = theme.particles === "rain" ? 0.2 : 0.35;
+  ctx.strokeStyle = theme.particles === "rain" ? "#D4ECFF" : "#FFFFFF";
+  ctx.fillStyle = "#FFFFFF";
+  for (let i = 0; i < count; i += 1) {
+    const drift = Math.floor(ts * (theme.particles === "rain" ? 0.12 : 0.025));
+    const x = (i * 79 + (theme.particles === "rain" ? drift : i * 3)) % BOARD_W;
+    const y = (i * 137 + Math.floor(ts * (theme.particles === "rain" ? 0.42 : 0.08))) % BOARD_H;
+    if (theme.particles === "rain") {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 2, y + 8);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.2 + (i % 3) * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   ctx.restore();
 }
 

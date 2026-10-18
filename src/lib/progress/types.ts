@@ -20,6 +20,10 @@ export interface ProgressState {
   achievements: string[];
   /** Unlocked cosmetic skin ids (purely visual). */
   skins: string[];
+  /** Cosmetic field selection and unlocked theme ids, synced with the account. */
+  fieldThemeId: string;
+  unlockedFieldThemes: string[];
+  seenFieldThemes: string[];
 }
 
 /** All collectible kit values (fictional designs — see collection screen). */
@@ -43,5 +47,8 @@ export function emptyProgress(): ProgressState {
     },
     achievements: [],
     skins: [],
+    fieldThemeId: "classic",
+    unlockedFieldThemes: ["classic"],
+    seenFieldThemes: ["classic"],
   };
 }

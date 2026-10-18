@@ -12,6 +12,7 @@ import type { DailyBoardEntry } from "@/lib/daily/types";
 import type { DailyQuest } from "@/lib/daily/quests";
 import { sortQuestCards, type QuestCard } from "@/lib/daily/questOrder";
 import { GAME_UI, LANG, t, type StringKey } from "@/lib/i18n";
+import { FIELD_THEMES, type FieldThemeId } from "@/lib/game/fieldThemes";
 
 type TabId = "quests" | "how" | "scores" | "badges";
 
@@ -98,6 +99,11 @@ interface MainMenuProps {
   onPlay: () => void;
   onPlayDaily: () => void;
   onClaimQuest: (questId: string) => void;
+  playerLevel: number;
+  selectedFieldTheme: FieldThemeId;
+  seenFieldThemes: string[];
+  onSelectFieldTheme: (id: FieldThemeId) => void;
+  onLockedFieldTheme: (name: string) => void;
 }
 
 export function MainMenu({
@@ -112,6 +118,11 @@ export function MainMenu({
   onPlay,
   onPlayDaily,
   onClaimQuest,
+  playerLevel,
+  selectedFieldTheme,
+  seenFieldThemes,
+  onSelectFieldTheme,
+  onLockedFieldTheme,
 }: MainMenuProps) {
   const [tab, setTab] = useState<TabId>("quests");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -263,7 +274,36 @@ export function MainMenu({
       </div>
 
       {/* bottom actions: safe-area aware */}
-      <div className="menu-footer flex gap-2 px-4 pt-3">
+      <div className="menu-footer flex flex-col gap-2 px-3 pt-2">
+        <section className="field-theme-picker" aria-label={GAME_UI.fieldThemes.heading}>
+          <div className="field-theme-heading">{GAME_UI.fieldThemes.heading}</div>
+          <div className="field-theme-list">
+            {FIELD_THEMES.map((theme) => {
+              const unlocked = theme.unlockLevel <= playerLevel;
+              const selected = selectedFieldTheme === theme.id;
+              const isNew = unlocked && !seenFieldThemes.includes(theme.id);
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  className={`field-theme-card${selected ? " is-selected" : ""}${unlocked ? "" : " is-locked"}`}
+                  aria-pressed={selected}
+                  aria-label={unlocked ? `${theme.name}${selected ? `, ${GAME_UI.fieldThemes.selected}` : ""}` : `${theme.name}, ${GAME_UI.fieldThemes.locked(theme.unlockLevel)}`}
+                  onClick={() => unlocked ? onSelectFieldTheme(theme.id) : onLockedFieldTheme(theme.name)}
+                >
+                  <span className="field-theme-preview" style={{ background: theme.preview }} aria-hidden="true">
+                    <span className="field-theme-preview-lines" />
+                    {!unlocked && <span className="field-theme-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="8" rx="1.8" fill="#f5f6ff"/><path d="M5 7V5a3 3 0 1 1 6 0v2" fill="none" stroke="#f5f6ff" strokeWidth="1.8"/></svg></span>}
+                    {isNew && <span className="field-theme-new">{GAME_UI.fieldThemes.newBadge}</span>}
+                  </span>
+                  <span className="field-theme-name">{theme.name}</span>
+                  {!unlocked && <span className="field-theme-unlock">{GAME_UI.fieldThemes.locked(theme.unlockLevel)}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <div className="flex gap-2">
         <button
           type="button"
           onClick={onPlay}
@@ -296,6 +336,7 @@ export function MainMenu({
             />
           )}
         </button>
+        </div>
       </div>
     </div>
   );

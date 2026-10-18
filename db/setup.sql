@@ -60,8 +60,14 @@ CREATE TABLE IF NOT EXISTS player_progress (
   xp integer NOT NULL DEFAULT 0,
   counters jsonb NOT NULL DEFAULT '{}'::jsonb,
   achievements text[] NOT NULL DEFAULT '{}',
+  field_theme_id text NOT NULL DEFAULT 'classic',
+  unlocked_field_themes text[] NOT NULL DEFAULT ARRAY['classic']::text[],
+  seen_field_themes text[] NOT NULL DEFAULT ARRAY['classic']::text[],
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE player_progress ADD COLUMN IF NOT EXISTS field_theme_id text NOT NULL DEFAULT 'classic';
+ALTER TABLE player_progress ADD COLUMN IF NOT EXISTS unlocked_field_themes text[] NOT NULL DEFAULT ARRAY['classic']::text[];
+ALTER TABLE player_progress ADD COLUMN IF NOT EXISTS seen_field_themes text[] NOT NULL DEFAULT ARRAY['classic']::text[];
 
 CREATE TABLE IF NOT EXISTS daily_scores (
   id serial PRIMARY KEY,

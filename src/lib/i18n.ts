@@ -9,6 +9,23 @@ export const LANG: Lang = "tr";
 /** Copy used by the live match HUD, power-ups, pause sheet and canvas effects. */
 export const GAME_UI = {
   title: "JERSEY MERGE",
+  fieldThemes: {
+    heading: "SAHA",
+    locked: (level: number) => `Sv. ${level}'te açılır`,
+    newlyUnlocked: (name: string) => `Yeni saha açıldı: ${name}`,
+    newBadge: "YENİ",
+    selected: "Seçili saha",
+    names: {
+      classic: "Klasik",
+      night: "Gece",
+      neighborhood: "Mahalle",
+      rain: "Yağmurlu",
+      derby: "Derbi",
+      beach: "Sahil",
+      winter: "Kış",
+      golden: "Altın",
+    },
+  },
   chainPreview: "2'den 2048'e forma zinciri",
   score: "SKOR",
   best: "REKOR",

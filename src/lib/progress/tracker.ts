@@ -19,6 +19,9 @@ export class ProgressTracker {
           counters: { ...emptyProgress().counters, ...initial.counters },
           achievements: [...initial.achievements],
           skins: [...initial.skins],
+          fieldThemeId: initial.fieldThemeId ?? "classic",
+          unlockedFieldThemes: [...(initial.unlockedFieldThemes ?? ["classic"])],
+          seenFieldThemes: [...(initial.seenFieldThemes ?? ["classic"])],
         }
       : emptyProgress();
   }

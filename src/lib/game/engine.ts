@@ -36,6 +36,7 @@ import { GAME_UI } from "@/lib/i18n";
 import { loadHapticsEnabled, setHapticsEnabled, vibrate } from "./haptics";
 import { mulberry32, type Rng } from "./prng";
 import type { GameEvent } from "./events";
+import { CLASSIC_FIELD_THEME, type FieldTheme } from "./fieldThemes";
 import {
   BOMB_BLAST_RADIUS,
   POWERUPS,
@@ -172,6 +173,7 @@ export class JerseyEngine {
     dangerLevel: 0,
     ts: 0,
     reducedMotion: false,
+    fieldTheme: CLASSIC_FIELD_THEME,
   };
   private byId = new Map<number, Jersey>();
 
@@ -225,6 +227,10 @@ export class JerseyEngine {
     if (this.canvas.height !== h) this.canvas.height = h;
     this.viewScale = w / BOARD_W;
     void h;
+  }
+
+  setFieldTheme(theme: FieldTheme): void {
+    this.frameState.fieldTheme = theme;
   }
 
   // ---------------------------------------------------------------- control

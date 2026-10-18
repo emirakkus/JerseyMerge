@@ -6,6 +6,7 @@ import type { GameEvent } from "@/lib/game/events";
 import type { MissionView } from "@/lib/game/missions";
 import type { PowerupSnapshot } from "@/lib/game/powerups";
 import { sfx } from "@/lib/game/sfx";
+import type { FieldTheme } from "@/lib/game/fieldThemes";
 
 export interface GameHandle {
   start: (bonus?: Partial<PowerupSnapshot["inventory"]>, seed?: number) => void;
@@ -21,6 +22,7 @@ export interface GameHandle {
   undoDrop: () => void;
   startDaily: (seed: number, bonus?: Partial<PowerupSnapshot["inventory"]>) => void;
   startChallenge: (seed: number) => void;
+  setFieldTheme: (theme: FieldTheme) => void;
 }
 
 interface GameBoardProps {
@@ -36,11 +38,12 @@ interface GameBoardProps {
   onPowerups: (snapshot: PowerupSnapshot) => void;
   onCombo: (combo: ComboEvent) => void;
   onGameEvent: (event: GameEvent) => void;
+  fieldTheme: FieldTheme;
   children?: ReactNode;
 }
 
 /** Canvas host: owns the engine instance, pointer + keyboard input and DPR sizing. */
-export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent, children }: GameBoardProps) {
+export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, onGameOver, onMissions, onBadges, onDanger, onPowerups, onCombo, onGameEvent, fieldTheme, children }: GameBoardProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<JerseyEngine | null>(null);
@@ -94,6 +97,7 @@ export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, o
       undoDrop: () => engine.undoDrop(),
       startDaily: (seed, bonus) => engine.startDaily(seed, bonus),
       startChallenge: (seed) => engine.startChallenge(seed),
+      setFieldTheme: (theme) => engine.setFieldTheme(theme),
     };
 
     const onKey = (e: KeyboardEvent): void => {
@@ -155,6 +159,10 @@ export function GameBoard({ gameRef, onScore, onNext, onUpcoming, onFollowing, o
       engineRef.current = null;
     };
   }, [gameRef]);
+
+  useEffect(() => {
+    engineRef.current?.setFieldTheme(fieldTheme);
+  }, [fieldTheme]);
 
   return (
     <div

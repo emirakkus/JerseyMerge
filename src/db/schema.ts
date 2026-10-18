@@ -111,5 +111,8 @@ export const playerProgress = pgTable("player_progress", {
   xp: integer("xp").notNull().default(0),
   counters: jsonb("counters").notNull().default({}),
   achievements: text("achievements").array().notNull().default([]),
+  fieldThemeId: text("field_theme_id").notNull().default("classic"),
+  unlockedFieldThemes: text("unlocked_field_themes").array().notNull().default(["classic"]),
+  seenFieldThemes: text("seen_field_themes").array().notNull().default(["classic"]),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

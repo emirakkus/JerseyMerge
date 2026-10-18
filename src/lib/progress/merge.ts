@@ -22,5 +22,8 @@ export function mergeProgress(local: ProgressState, remote: ProgressState): Prog
     counters: mergeCounters(local.counters, remote.counters),
     achievements: Array.from(new Set([...local.achievements, ...remote.achievements])),
     skins: Array.from(new Set([...local.skins, ...remote.skins])),
+    fieldThemeId: remote.fieldThemeId || local.fieldThemeId || "classic",
+    unlockedFieldThemes: Array.from(new Set([...(local.unlockedFieldThemes ?? ["classic"]), ...(remote.unlockedFieldThemes ?? ["classic"])])),
+    seenFieldThemes: Array.from(new Set([...(local.seenFieldThemes ?? ["classic"]), ...(remote.seenFieldThemes ?? ["classic"])])),
   };
 }
