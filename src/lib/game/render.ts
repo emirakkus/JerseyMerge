@@ -29,7 +29,10 @@ export interface FrameState {
 }
 
 const ACCENT_CORAL = "#FF5A5F";
-const JERSEY_ART_SCALE = 1.14;
+// The jersey silhouette occupies about 78% of the cached sprite width.
+// Scale its art to the collider diameter so small values don't look detached
+// from their physical size; the collider and radius progression stay unchanged.
+const JERSEY_ART_SCALE = 1.28;
 const backgroundGradients = new WeakMap<CanvasRenderingContext2D, Map<string, CanvasGradient>>();
 const dangerGradients = new WeakMap<CanvasRenderingContext2D, CanvasGradient>();
 
