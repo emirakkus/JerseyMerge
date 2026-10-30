@@ -17,7 +17,7 @@ export function createWorld(): WorldSetup {
   const thickness = 80;
   const wallOpts: Matter.IChamferableBodyDefinition = {
     isStatic: true,
-    restitution: 0.25,
+    restitution: 0.08,
     friction: 0.5,
     label: "wall",
   };
@@ -33,8 +33,15 @@ export function createWorld(): WorldSetup {
     const y2 = bowlFloorY(x2);
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const segment = Matter.Bodies.rectangle((x1 + x2) / 2, (y1 + y2) / 2, Math.hypot(dx, dy) + 3, 22, wallOpts);
-    Matter.Body.setAngle(segment, Math.atan2(dy, dx));
+    const angle = Math.atan2(dy, dx);
+    const thickness = 22;
+    // Place the top face on the visible arc. Centering this thick body on the
+    // arc lifts its collision surface by half its thickness and makes jerseys
+    // appear to hover above the floor.
+    const centerX = (x1 + x2) / 2 - Math.sin(angle) * thickness / 2;
+    const centerY = (y1 + y2) / 2 + Math.cos(angle) * thickness / 2;
+    const segment = Matter.Bodies.rectangle(centerX, centerY, Math.hypot(dx, dy) + 3, thickness, wallOpts);
+    Matter.Body.setAngle(segment, angle);
     bowl.push(segment);
   }
 
@@ -49,7 +56,7 @@ export function createJerseyBody(x: number, y: number, radius: number): Matter.B
     friction: 0.14,
     frictionStatic: 0.3,
     frictionAir: 0.008,
-    restitution: 0.34,
+    restitution: 0.08,
     density: 0.0016,
     sleepThreshold: 40,
   });

@@ -33,6 +33,8 @@ const ACCENT_CORAL = "#FF5A5F";
 // Scale its art to the collider diameter so small values don't look detached
 // from their physical size; the collider and radius progression stay unchanged.
 const JERSEY_ART_SCALE = 1.28;
+// Extend the shirt's shorter vertical silhouette to the circle's lower contact edge.
+const JERSEY_ART_HEIGHT_SCALE = 1.12;
 const backgroundGradients = new WeakMap<CanvasRenderingContext2D, Map<string, CanvasGradient>>();
 const dangerGradients = new WeakMap<CanvasRenderingContext2D, CanvasGradient>();
 
@@ -192,10 +194,11 @@ function ghostLandingY(x: number, radius: number, jerseys: readonly RenderJersey
 
 function drawJerseyIcon(ctx: CanvasRenderingContext2D, x: number, y: number, value: number, radius: number, alpha: number): void {
   const artRadius = value > 0 ? radius * JERSEY_ART_SCALE : radius;
+  const artHeightRadius = value > 0 ? artRadius * JERSEY_ART_HEIGHT_SCALE : artRadius;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(x, y);
-  ctx.drawImage(getJerseySprite(value, false), -artRadius, -artRadius, artRadius * 2, artRadius * 2);
+  ctx.drawImage(getJerseySprite(value, false), -artRadius, -artHeightRadius, artRadius * 2, artHeightRadius * 2);
   if (value > 0) {
     const s = 140 * (artRadius * 2 / 320);
     ctx.translate(0, 4 * (artRadius * 2 / 320));
@@ -211,6 +214,7 @@ export function drawJerseySprite(
   reducedMotion: boolean
 ): void {
   const artRadius = j.value > 0 ? j.radius * JERSEY_ART_SCALE : j.radius;
+  const artHeightRadius = j.value > 0 ? artRadius * JERSEY_ART_HEIGHT_SCALE : artRadius;
   const age = ts - j.spawnAt;
   let scale = 1;
   if (age < 220 && !reducedMotion) {
@@ -221,7 +225,7 @@ export function drawJerseySprite(
   ctx.translate(j.x, j.y);
   ctx.rotate(j.angle);
   ctx.scale(scale, scale);
-  ctx.drawImage(getJerseySprite(j.value, false), -artRadius, -artRadius, artRadius * 2, artRadius * 2);
+  ctx.drawImage(getJerseySprite(j.value, false), -artRadius, -artHeightRadius, artRadius * 2, artHeightRadius * 2);
   ctx.restore();
   if (j.value > 0) {
     ctx.save();
